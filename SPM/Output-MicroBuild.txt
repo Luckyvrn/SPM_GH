@@ -1,4 +1,4 @@
 ﻿This build would be faster if you upgraded to Visual Micro Gold Edition + USB debugger http://wwww.visualmicro.com 
 Please wait ...
 Compiling 'SPM_main' for 'Arduino Mega 2560 or Mega ADK'
-Binary sketch size: 16 718 bytes (used 6% of a 258 048 byte maximum) (1,52 secs)
+Binary sketch size: 16 722 bytes (used 6% of a 258 048 byte maximum) (1,11 secs)

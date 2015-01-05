@@ -194,7 +194,7 @@ if (fl_1min) {
 
 void Timer1_init(unsigned long millisecond) 
 {
-	result=65535-TIMER_CLOCK_FREQ*millisecond/1000000;
+	result=65536-TIMER_CLOCK_FREQ*millisecond/1000000;
 //	cli(); // Запрещаем все прерывания на время инициализации.
 	TCCR1A = 0;	// clear control register A  
 	TCCR1B = _BV(CS11); // предделитель на 8   
