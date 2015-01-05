@@ -53,7 +53,7 @@ byte index1, index2, CXP; //счётчик битов
 unsigned int xData1, xData2 , xDataBuf2, xDataBuf1; //новые показания 
 int xDataS, xDataS1Buf, xDataS2Buf;
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //буфер считанных данных с UDP
-unsigned int t_1ms, t_100ms, result;
+unsigned int t_1ms, t_100ms, resultT1, resultT3;
 byte fl_1s, fl_100ms;
 
 byte tTimeout_1 = 0; //таймер 1мс для Timeout Line_1
@@ -93,6 +93,11 @@ unsigned int CZagrP, CVbrkP, Delta, DINT, CUSTPRESS;
 int  XPLin=0xFF;
 unsigned int PrirLin[512]; // массив для расчета приращений
 
+// переменные для метода набора давления
+
+boolean fl_Run_PressUp, fl_PressUp, fl_Run_PressDn, fl_PressDn, fl_time_PFRZUp , fl_time_PFRZDn;
+byte t3_10ms, time_PUP, Send_Time_PUP, time_PDN, Send_Time_PDN, time_PFRZUp, time_PFRZDn;
+
 void setup(){	
 	digitalWrite (dataIn_1, 1);
 	digitalWrite (clockIn_1, 1);
@@ -111,6 +116,7 @@ void setup(){
 //	Timer1.initialize(1000); // установить интервал срабатывания 1000 microseconds 
 //	Timer1.attachInterrupt( timerIsr ); // устновка функции (обработчика прерывания)
 	Timer1_init(1000);	// установить интервал срабатывания 1000 microseconds 
+	Timer3_init(1000);  // установить интервал срабатывания 1000 microseconds 
     
 	
 	pinMode (ledPin, OUTPUT); //Настройка LED как выход
@@ -138,7 +144,7 @@ void setup(){
 //void timerIsr() //прерывание 1ms
 ISR(TIMER1_OVF_vect) //прерывание 1ms
 {
-	TCNT1=result;
+	TCNT1=resultT1;
 	t_1ms++;
 	t_100ms++;
 	tTimeout_1++;
@@ -149,6 +155,52 @@ ISR(TIMER1_OVF_vect) //прерывание 1ms
 	if (t_100ms>=100) {fl_100ms=1; t_100ms=0;}	
 	if (t_1min>=61) {t_1min=60;}	
 	if ((t_1min>=60)&&(FStart==1)) {minutes++; t_1min=0; fl_1min=1;}
+}
+
+ISR(TIMER3_OVF_vect) //прерывание 1ms
+{
+	TCNT3=resultT3;
+	t3_10ms++;
+	if (t3_10ms>=10) {
+		t3_10ms=0;
+		
+		if (fl_PressUp==1 && time_PUP<=Send_Time_PUP && fl_time_PFRZUp==1) { // ВПУСКНОЙ КЛАПАН
+			time_PUP++;
+			fl_Run_PressUp=1;
+			PORTL=PORTL | B00001000; //PL3 установка диапазона стабилзции давления (открыть впускной)
+			}	
+		else{
+			PORTL=PORTL & B11110111; // (закрыть впускной)
+			time_PUP=0;
+			fl_Run_PressUp=0;
+			fl_time_PFRZUp=0;
+		}	
+		
+		if (fl_time_PFRZUp==0 )	{ //ожидание времени для усреднений значений АЦП
+			time_PFRZUp++;
+			PORTL=PORTL & B11110111; // (закрыть впускной)
+			if (time_PFRZUp>=80) { time_PFRZUp=0; fl_time_PFRZUp=1; }
+		}		
+//----------	
+		if (fl_PressDn==1 && time_PDN<=Send_Time_PDN && fl_time_PFRZDn==1) { // ВЫПУСКНОЙ КЛАПАН
+			time_PDN++;
+			fl_Run_PressDn=1;
+			PORTL=PORTL | B00000010; //PL1 установка диапазона стабилзции давления (открыть выпускной)
+		}
+		else{
+			PORTL=PORTL & B11111101; // (закрыть выпускной)
+			time_PDN=0;
+			fl_Run_PressDn=0;
+			fl_time_PFRZDn=0;
+		}		
+				
+		if (fl_time_PFRZDn==0)	{ //ожидание времени для усреднений значений АЦП
+			time_PFRZDn++;
+			PORTL=PORTL & B11111101; // (закрыть выпускной)
+			if (time_PFRZDn>=80) { time_PFRZDn=0;  fl_time_PFRZDn=1; }
+		}		
+								
+		}
 }
 
 void loop()
@@ -165,23 +217,18 @@ if (fl_100ms==1) {
 
 if(fl_1s)
 {
-	PORTB=PORTB^B10000000; //светодиод D13 мигалка раз в 1 с
-	
-	fl_1s=0;
-	
-	if (Rejim==0)
-	{
+//	PORTB=PORTB^B10000000; //светодиод D13 мигалка раз в 1 с	
+	fl_1s=0;	
+	if (Rejim==0){
 		UprOut[ZagrOut].Flag=1;
 		UprOut[ZagrOut].KodKom=1;
 		ZagrOut=0xF &(ZagrOut+1);
-	}
-	if (Rejim==1)
-	{
+		}
+	if (Rejim==1){
 		UprOut[ZagrOut].Flag=1;
 		UprOut[ZagrOut].KodKom=3;
 		ZagrOut=0xF &(ZagrOut+1);
-	}
-	
+		}	
 }
 
 if (fl_1min) {
@@ -192,16 +239,27 @@ if (fl_1min) {
 }
 
 
-void Timer1_init(unsigned long millisecond) 
+void Timer1_init(unsigned long millisecondT1) 
 {
-	result=65536-TIMER_CLOCK_FREQ*millisecond/1000000;
+	resultT1=65536-TIMER_CLOCK_FREQ*millisecondT1/1000000;
 //	cli(); // Запрещаем все прерывания на время инициализации.
 	TCCR1A = 0;	// clear control register A  
 	TCCR1B = _BV(CS11); // предделитель на 8   
 	TIMSK1|=(1<<TOIE1);
-    TCNT1=result;
+    TCNT1=resultT1;
 //	sei(); // Закончили инициализацию, разрешаем все прерывания.
 }		
+
+void Timer3_init(unsigned long millisecondT3)
+{
+	resultT3=65536-TIMER_CLOCK_FREQ*millisecondT3/1000000;
+	//	cli(); // Запрещаем все прерывания на время инициализации.
+	TCCR3A = 0;	// clear control register A
+	TCCR3B = _BV(CS31); // предделитель на 8
+	TIMSK3|=(1<<TOIE3);
+	TCNT3=resultT3;
+	//	sei(); // Закончили инициализацию, разрешаем все прерывания.
+}
 
 void OutDatUDP()
 {
@@ -535,14 +593,26 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 					if ((AUTO_Press[NumStepM].P>0) && (AUTO_Press[NumStepM].T>0))	// проверка условии испытании
 					 {			 
 		    		 if (FSetPrsSt==0) { AUTO_Press_ST=AUTO_Press[NumStepM].P; DINT=AUTO_Press[NumStepM].T; FSetPrsSt=1; }   //установка значения PressAUTOST.P(давление стабилизации) И времени усл. стаб.
-//					 Serial.write(0xFF); Serial.write(AUTO_Press_ST); Serial.write(AUTO_Press_ST>>8); Serial.write(DINT); Serial.write(DINT>>8);
+
 		    		 if (ADCPRS<=(AUTO_Press_ST-15)) {						 
-						 PORTL=PORTL | B00001000; //PL3 установка диапазона стабилзции давления (открыть впускной)
-//						 fl_PressUp=1;
-					 }
-		    		 else {PORTL=PORTL & B11110111;}
-		    		 if (ADCPRS>=(AUTO_Press_ST+25)) PORTL=PORTL | B00000010; //PL1 установка диапазона стабилзции давления (открыть выпускной)
-		    		 else {PORTL=PORTL & B11111101;}
+//						 PORTL=PORTL | B00001000; //PL3 установка диапазона стабилзции давления (открыть впускной)
+						 fl_PressUp=1;
+						 if (fl_Run_PressUp==0){
+							Send_Time_PUP = round(abs(AUTO_Press_ST-ADCPRS)/10); // время открытия впускного клапана
+							if (Send_Time_PUP<10) {Send_Time_PUP=10;} //открываем минимум на 10 раз по 10милис
+							}
+						}
+		    		 else {PORTL=PORTL & B11110111; fl_PressUp=0;}
+		    		 if (ADCPRS>=(AUTO_Press_ST+25)){						 						 
+//						  PORTL=PORTL | B00000010; //PL1 установка диапазона стабилзции давления (открыть выпускной)
+						 fl_PressDn=1;
+						 if (fl_Run_PressDn==0){
+							 Send_Time_PDN = round(abs(ADCPRS-AUTO_Press_ST)/10); // время открытия выпускного клапана
+							 if (Send_Time_PDN<10) {Send_Time_PDN=10;} //открываем минимум на 10 раз по 10милис		
+							 }
+						}						 
+		    		 else {PORTL=PORTL & B11111101; fl_PressDn=0;}
+						 
 		    		 if ((ADCPRS>=(AUTO_Press_ST-15)) && (ADCPRS<=(AUTO_Press_ST+25)) && (FSetPrsSt300==0))
 		    		 {
 						 if (CUSTPRESS>=300)

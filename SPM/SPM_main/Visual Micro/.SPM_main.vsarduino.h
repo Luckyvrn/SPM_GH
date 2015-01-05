@@ -18,7 +18,8 @@ extern "C" void __cxa_pure_virtual() {;}
 
 //
 //
-void Timer1_init(unsigned long millisecond);
+void Timer1_init(unsigned long millisecondT1);
+void Timer3_init(unsigned long millisecondT3);
 void OutDatUDP();
 void ReadDatUDP();
 void getBit();
