@@ -30,6 +30,6 @@ void PRSAUTOST();
 
 #include "C:\Program Files\Arduino\hardware\arduino\variants\mega\pins_arduino.h" 
 #include "C:\Program Files\Arduino\hardware\arduino\cores\arduino\arduino.h"
-#include "D:\Develop\SPM_-.-.15\SPM\CV_SPM_3.01.15\SPM\SPM_main\SPM_main.ino"
-#include "D:\Develop\SPM_-.-.15\SPM\CV_SPM_3.01.15\SPM\SPM_main\MyClass.cpp"
-#include "D:\Develop\SPM_-.-.15\SPM\CV_SPM_3.01.15\SPM\SPM_main\MyClass.h"
+#include "D:\Develop\SPM_5.01.15\SPM\CV_SPM_GH\SPM\SPM_main\SPM_main.ino"
+#include "D:\Develop\SPM_5.01.15\SPM\CV_SPM_GH\SPM\SPM_main\MyClass.cpp"
+#include "D:\Develop\SPM_5.01.15\SPM\CV_SPM_GH\SPM\SPM_main\MyClass.h"
