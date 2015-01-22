@@ -21,8 +21,8 @@
 // Enter a MAC address && IP address for your controller below.
 // The IP address will be dependent on your local network:
 byte mac[] = {
-0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-IPAddress ip(192, 168, 0, 176); 
+0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x77 }; // MAC адрес устройства
+IPAddress ip(192, 168, 0, 177); //ip адрес устройства
 IPAddress ipServer(192, 168, 0, 255); //послать всем
 
 unsigned int localPort = 21666;      //  // номер локального порта для прослушивания
@@ -76,7 +76,7 @@ int CA;
 byte t_1min;
 boolean FLin1Dis=0, FLin2Dis=0; //состояние датчиков Lin
 byte STT=0x00, NumStep; //статус устройства, NumStep - номер шага.
-unsigned int minutes=0, Km=1, Kn=0; // minutes - проидено минут с начала шага, Km и Kn - коэффициенты маштабирования и нуля.
+unsigned int minutes=0, Km=1, KmL, KmH, Kn=0, KnL, KnH; // minutes - проидено минут с начала шага, Km и Kn - коэффициенты маштабирования и нуля.
 
 struct TUpr{ unsigned int P, T; };
 TUpr AUTO_Press[10];
@@ -268,7 +268,7 @@ void OutDatUDP()
 
 		if (UprOut[VbrkOut].KodKom==1)
 		{
-			BufOut[2]=0x01;     //--- Код Пакета (Команда)
+			BufOut[2]=0x82;     //--- Код Пакета (Команда)
 			BufOut[3]=0x00;
 			BufOut[4]=0x00;
 			BufOut[5]=0x01;     //--- Длина Информационной Части
@@ -293,7 +293,7 @@ void OutDatUDP()
 			BufOut[2]=0x85;      //--- Код Пакета (Параметры Контроллера)
 			BufOut[3]=0x00;
 			BufOut[4]=0x00;			
-			BufOut[5]=0x10;      //--- Длина Информационной Части
+			BufOut[5]=0x12;      //--- Длина Информационной Части
 			BufOut[6]=isin1;     //--- Признак системы измерения
 			BufOut[7]=isfs1;     //--- Знак Числа
 			BufOut[8]=xData1;    //--- Значение измерения (Младшая часть)
@@ -307,10 +307,12 @@ void OutDatUDP()
 			BufOut[16]=ADCPRS;     //--- АЦП (Младшая часть)
 			BufOut[17]=ADCPRS>>8;     //--- АЦП (Старшая часть)
 			BufOut[18]=minutes;     //--- минуты (Младшая часть)
-			BufOut[19]=minutes>>8;  //--- минуты (Старшая часть)	
-			BufOut[20]=NumStep;     // номер шага										
-			BufOut[21]=STT;		// ---статус устройств
-			LenBuf=21;
+			BufOut[19]=minutes>>8;  //--- минуты (Старшая часть)		
+			BufOut[20]=Delta;     //--- Дельта (Младшая часть)
+			BufOut[21]=Delta>>8;  //--- Дельта (Старшая часть)	
+			BufOut[22]=NumStep;     // номер шага											
+			BufOut[23]=STT;		// ---статус устройств
+			LenBuf=23;
 			}
 
 		if (UprOut[VbrkOut].KodKom==4)
@@ -370,87 +372,108 @@ void ReadDatUDP()
  		   if (StartPkt==1) StartPkt=0;
  		   if ((XC==0x93)&&(StartPkt==0)) { StartPkt=StartPkt+1; }
  		   
- 		if ((KodPkt==0x01)&&(Vbrk>=1)) //Обработка по приему пакета "Подтверждение регистрации усройства на сервере" 0x02
+ 		if ((KodPkt==0x01)&&(Vbrk>=1)) //Обработка по приему пакета "команды" 0x01
  		{
 			if (Vbrk==1) EnPkt=1;
 			if (Vbrk==5) BufKmd=XC;
 	 		if (Vbrk==6)
 	 		{
-		 		if (CRS==XC){ //проверка контрольной суммы
+		 		if (CRS==XC)	//проверка контрольной суммы
+				 { 
 //			 		Serial.write(CRS);
 //			 		Serial.write(XC);
-                    if (BufKmd==0x42) //передать загруженные команды управления и флаги состояния устройства
-					{
-			 		StartPkt=0; Vbrk=0; EnPkt=0;
-			 		UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //выставить флаги для отправки подтверждения
-			 		UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=4; ZagrOut=0xF &(ZagrOut+1); //выставить флаги для отправки подтверждения
-					}
+                    if (BufKmd==0x41)		// "Выполнить авторизацию" перерегестрация устройства на сервере
+						{
+			 			StartPkt=0; Vbrk=0; EnPkt=0; Rejim=0;
+			 			UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //подтверждение приема
+						}
+					if (BufKmd==0x42)		//передать загруженные команды управления и флаги состояния устройства 
+						{
+						StartPkt=0; Vbrk=0; EnPkt=0; 
+						UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //подтверждение приема
+						UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=4; ZagrOut=0xF &(ZagrOut+1); //передать конфигурацию устройства
+						}					
                     if (BufKmd==0x43)		// начать испытание
-                    {
-			 		StartPkt=0; Vbrk=0; EnPkt=0;
-			 		UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //выставить флаги для отправки подтверждения
-                    FStart=1; t_1min=0; STT|=0x40;
-                    }
-                    if (BufKmd==0x44)		// закончить испытание
-                    {
+						{
+			 			StartPkt=0; Vbrk=0; EnPkt=0;
+			 			UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //подтверждение приема
+						FStart=1; t_1min=0; STT|=0x40;
+						}
+                    if (BufKmd==0x44)		// Остановить испытание
+						{
 	                    StartPkt=0; Vbrk=0; EnPkt=0;
-	                    UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //выставить флаги для отправки подтверждения
+	                    UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //подтверждение приема
 	                    FStart=0; STT&=0xBF;
 						NumStepM=0; minutes=0;
-                    }
-					 if (BufKmd==0x45)		// перерегестрация устройства на сервере
-					 {
-						 StartPkt=0; Vbrk=0; EnPkt=0; Rejim=0; 
-						 UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //выставить флаги для отправки подтверждения
-					 }
-		 		}
+						}
+		 		 }
 	 		}
  		}
+		 
+ 		if ((KodPkt==0x02)&&(Vbrk>=1)) //Обработка по приему пакета "Подтверждение регистрации усройства на сервере" 0x02
+ 		{
+	 		if (Vbrk==1) EnPkt=1;
+	 		if (Vbrk==5) IPS0=XC;
+	 		if (Vbrk==6) IPS1=XC;
+	 		if (Vbrk==7) IPS2=XC;
+	 		if (Vbrk==8) IPS3=XC;  
+	 		if (Vbrk==9)
+	 		{
+		 		if (CRS==XC)	//проверка контрольной суммы
+				 { 
+			 		//		    	Serial.write(CRS);
+			 		//				Serial.write(XC);
+			 		Rejim=1;
+			 		StartPkt=0; Vbrk=0; EnPkt=0;
+					ipServer[0]=IPS0; ipServer[1]=IPS1; ipServer[2]=IPS2; ipServer[3]=IPS3; //установка рефльного IP adres server
+			 		UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //выставить флаги для отправки подтверждения
+		 		 }
+	 		}
+ 		}		 
 
- 		   if ((KodPkt==0x02)&&(Vbrk>=1)) //Обработка по приему пакета "Команды управления" 0x02
- 		   {
- 			   if (Vbrk==1) EnPkt=1;
- 			   if (Vbrk>=5)
+ 		if ((KodPkt==0x03)&&(Vbrk>=1)) //Обработка по приему пакета "Параметры переключения ступеней" 0x03
+ 		  {
+ 			if (Vbrk==1) EnPkt=1;
+ 			if (Vbrk>=5)
  			   {
- 				   BufPrm[CPrm]=XC;
- 				   if ((CRS==XC)&&(CPrm==LenPkt))
- 				   { //проверка контрольной суммы
-// 					   Serial.write(CRS);
-// 					   Serial.write(XC);
- 					   PByte=(byte*) &AUTO_Press[0];
- 					   CA=0;
- 					   while(CA<LenPkt)
+ 				BufPrm[CPrm]=XC;
+ 			   if ((CRS==XC)&&(CPrm==LenPkt))
+ 				  { //проверка контрольной суммы
+// 					 Serial.write(CRS);
+// 					 Serial.write(XC);
+ 					 PByte=(byte*) &AUTO_Press[0];
+ 					 CA=0;
+ 					 while(CA<LenPkt)
  					   {
  						   *PByte=BufPrm[CA]; PByte++;
  						   CA++;
  					   }
-                       CntKom=CPrm >> 2;
- 					   StartPkt=0; Vbrk=0; EnPkt=0;
- 					   UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //выставить флаги для отправки подтверждения принятия команд управления
- 			      }
+                     CntKom=CPrm >> 2;
+ 					 StartPkt=0; Vbrk=0; EnPkt=0;
+ 					 UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //выставить флаги для отправки подтверждения принятия команд управления
+ 			     }
 			    CPrm++;
- 		    }
- 	  	 }
+ 			 }
+ 		 }
 
- 		if ((KodPkt==0x82)&&(Vbrk>=1)) //Обработка по приему пакета "Подтверждение регистрации усройства на сервере" 0x02
- 		 {
- 			if (Vbrk==1) EnPkt=1;
-			if (Vbrk==5) IPS0=XC;
-			if (Vbrk==6) IPS1=XC;
-			if (Vbrk==7) IPS2=XC;
-			if (Vbrk==8) {IPS3=XC;  ipServer[0]=IPS0; ipServer[1]=IPS1; ipServer[2]=IPS2; ipServer[3]=IPS3;} //установка рефльного IP adres server  
- 			if (Vbrk==9)
- 			 {		
- 			   if (CRS==XC){ //проверка контрольной суммы
-//		    		Serial.write(CRS);
-//				Serial.write(XC);
-				Rejim=1; 
- 				StartPkt=0; Vbrk=0; EnPkt=0;	
-				UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //выставить флаги для отправки подтверждения		
-				}
-  			 }
-  		}
-
+ 		if ((KodPkt==0x04)&&(Vbrk>=1)) //Обработка по приему пакета "Подтверждение регистрации усройства на сервере" 0x02
+ 		{
+	 		if (Vbrk==1) EnPkt=1;
+	 		if (Vbrk==5) KmL=XC;
+	 		if (Vbrk==6) KmH=XC;
+	 		if (Vbrk==7) KnL=XC;
+	 		if (Vbrk==8) KnH=XC;  
+	 		if (Vbrk==9)
+	 		{
+		 		if (CRS==XC)	//проверка контрольной суммы
+		 		{
+			 		//		    	Serial.write(CRS);
+			 		//				Serial.write(XC);
+					Km=KmL|KmH<<8; Kn=KnL|KnH<<8;
+			 		UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //выставить флаги для отправки подтверждения
+		 		}
+	 		}
+ 		}
 
  
  	   if (Vbrk>=1) CRS=CRS+XC;
@@ -555,7 +578,7 @@ void DataLine() { //Формирование дынных линейных да�
 void DataAdc(){//----Чтение АЦП - показания давления -----//	
 		XPress[CXP]=analogRead(ADCPRSPin);
 		ADCPRS=(XPress[0]+XPress[1]+XPress[2]+XPress[3]+XPress[4]+XPress[5]+XPress[6]+XPress[7])/8;
-		ADCPRS=(ADCPRS-Kn)*Km;
+		ADCPRS=(ADCPRS-Kn)*Km/1000;
 		CXP=0x07 &(CXP+1);
 		fl_100ms=0;			
 }
@@ -570,7 +593,7 @@ void Prir(){  // расчет приращения за время условн�
 	  {
 	  XPLin=PrirLin[CZagrP]-PrirLin[CVbrkP]; //Serial.write(XPLin); Serial.write(XPLin>>8);
 	  CVbrkP=0x1FF &( CVbrkP+1);
-	  FTST=1;
+	  FTST=1; STT|=0x10;
 //	  Serial.write(0xAA);
 	  }
   CZagrP=0x1FF & (CZagrP+1);	
@@ -585,8 +608,8 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 					if (fl_RZ==0) {minutes=0; t_1min=0; fl_RZ=1;}
 					if (minutes >= AUTO_Press[NumStepM].T) { //если прошло установленное время перейти к след ступени
 						minutes=0; t_1min=0; fl_RZ=0;NumStepM=NumStepM+1; 
-						FSetPrsSt=0; FSetPrsSt300=0; // убрать 
-						Delta=0; CZagrP=0; CVbrkP=0; FTST=0; XPLin=0xFF; //убрать
+						FSetPrsSt=0; FSetPrsSt300=0; STT&=0xDF;// убрать 
+						Delta=0; CZagrP=0; CVbrkP=0; FTST=0; STT&=0xEF; XPLin=0xFF; //убрать
 						}
 					}
 				else {	//основной режим стабилизации	
@@ -617,8 +640,8 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 		    		 {
 						 if (CUSTPRESS>=300)
 						 {
-						 	 minutes=0; t_1min=0; FTST=0; fl_1min=1; 
-						 	 FSetPrsSt300=1; CUSTPRESS=0; Delta=0; CZagrP=0; CVbrkP=0;  XPLin=0xFF;				    	
+						 	 minutes=0; t_1min=0; FTST=0; STT&=0xEF; fl_1min=1; 
+						 	 FSetPrsSt300=1; STT|=0x20; CUSTPRESS=0; Delta=0; CZagrP=0; CVbrkP=0;  XPLin=0xFF;				    	
 			    		 }
 			    		 CUSTPRESS++;
 		    		 }
@@ -627,32 +650,38 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 						 if ((AUTO_Press[NumStepM+1].P==0) && (AUTO_Press[NumStepM+1].T==0)) // окончание испытания
 						 {
 						 	 FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0;
-							 FSetPrsSt300=0; FTST=0; Delta=0; CZagrP=0; CVbrkP=0;
+							 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
 				    		 XPLin=0xFF; 
 							 PORTL=PORTL & B11110111;
-							 PORTL=PORTL & B11111101;
+							 if (ADCPRS>=500) {PORTL=PORTL | B00000010;}	//открыть выпускной клапан
+								else {PORTL=PORTL & B11111101;}				// закрыть выпускной клапан
 						 }
 						 else
 			    		 {
-							 FSetPrsSt=0; FSetPrsSt300=0; NumStepM=NumStepM+1;  //если за время условной стаб приращение <0.1мм то перейти к след ступени
-							 Delta=0; CZagrP=0; CVbrkP=0; FTST=0; XPLin=0xFF; minutes=0; t_1min=0;
-							 PORTL=PORTL & B11110111;
-							 PORTL=PORTL & B11111101;
+							 FSetPrsSt=0; FSetPrsSt300=0; STT&=0xDF; NumStepM=NumStepM+1;  //если за время условной стаб приращение <0.1мм то перейти к след ступени
+							 Delta=0; CZagrP=0; CVbrkP=0; FTST=0; STT&=0xEF; XPLin=0xFF; minutes=0; t_1min=0;
+							 PORTL=PORTL & B11110111; // закрыть впускной клапан
+							 PORTL=PORTL & B11111101; // закрыть выпускной клапан
 			    		 }
 		    		 }
 		    		 if (NumStepM>=11) { // окончание испытания
 										 FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0;
-						 				 FSetPrsSt300=0; FTST=0; Delta=0; CZagrP=0; CVbrkP=0;
+						 				 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
 						 				 XPLin=0xFF; NumStepM=0;
 						 				 PORTL=PORTL & B11110111;
-						 				 PORTL=PORTL & B11111101;}				 
+										 if (ADCPRS>=500) {PORTL=PORTL | B00000010;}	//открыть выпускной клапан
+											 else {PORTL=PORTL & B11111101;}			// закрыть выпускной клапан
+										 }				 
 				    }				   
 				   else { // окончание испытания
 					   FStart=0; STT&=0xBF;  FSetPrsSt=0; minutes=0; t_1min=0;
-					   FSetPrsSt300=0; FTST=0; Delta=0; CZagrP=0; CVbrkP=0;
+					   FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
 					   XPLin=0xFF; NumStepM=0;
 					   PORTL=PORTL & B11110111;
-					   PORTL=PORTL & B11111101;} 
+					   if (ADCPRS>=500) {PORTL=PORTL | B00000010;}	//открыть выпускной клапан
+						  else {PORTL=PORTL & B11111101;}			// закрыть выпускной клапан
+					   } 
+					   
 				 }
 
 	    	 }	
