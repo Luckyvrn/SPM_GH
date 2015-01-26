@@ -26,6 +26,7 @@ void getBit();
 void getBit_1();
 void DataLine();
 void DataAdc();
+uint16_t find_similar(uint16_t *buf, uint8_t size_buff, uint8_t range);
 void Prir();
 void PRSAUTOST();
 

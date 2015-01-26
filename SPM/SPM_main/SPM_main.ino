@@ -42,9 +42,9 @@ int dataIn_2 = 26; //шина данных, можно менять Line_2
 int clockIn_2 = 19; //шина clock, не трогать, так надо ( attachInterrupt) Line_2   
 
 int ADCPRSPin = 8;     // номер аналогового входа к которому подключен датчик давления
-//unsigned int ADCPRS=0; //измеренное значение давления
-unsigned int ADCPRS=0; //измеренное значение давления
-unsigned int XPress[8];
+unsigned int ADCPRS=0, ADCPRSnf=0; //измеренное значение давления
+unsigned int XPress[32];
+float FK = 0.5; //настройки фильтра ФНЧ
 
 byte isin = 0, isin1 = 0, isin2 = 0; //д=1 мм=0
 byte isfs = 0, isfs1 = 0,  isfs2 = 0; //минус
@@ -54,8 +54,8 @@ byte index1, index2, CXP; //счётчик битов
 unsigned int xData1, xData2 , xDataBuf2, xDataBuf1; //новые показания 
 int xDataS, xDataS1Buf, xDataS2Buf;
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //буфер считанных данных с UDP
-unsigned int t_1ms, t_100ms, resultT1, resultT3;
-byte fl_1s, fl_100ms;
+unsigned int t_1ms, t_10ms, resultT1, resultT3;
+byte fl_1s, fl_10ms;
 
 byte tTimeout_1 = 0; //таймер 1мс для Timeout Line_1
 byte tTimeout_2 = 0; //таймер 1мс для Timeout Line_2
@@ -72,7 +72,7 @@ byte BufOut[256];
 byte StartPkt, KodPkt, XC, Vbrk, CRS, Rejim, EnPkt, NumPkt, NumPvt, NumKmd, LenPkt;
 int CA;
 
-//переменный для предачи на сервер
+//переменные для предачи на сервер
 
 byte t_1min;
 boolean FLin1Dis=0, FLin2Dis=0; //состояние датчиков Lin
@@ -148,13 +148,13 @@ ISR(TIMER1_OVF_vect) //прерывание 1ms
 {
 	TCNT1=resultT1;
 	t_1ms++;
-	t_100ms++;
+	t_10ms++;
 	tTimeout_1++;
 	tTimeout_2++;
 	if (tTimeout_1>=251) {tTimeout_1=250;}
 	if (tTimeout_2>=251) {tTimeout_2=250;}
 	if (t_1ms>=1000) {fl_1s=1; t_1ms=0; t_1min++;}
-	if (t_100ms>=100) {fl_100ms=1; t_100ms=0;}	
+	if (t_10ms>=10) {fl_10ms=1; t_10ms=0;}	
 	if (t_1min>=60) {t_1min=60;}	
 	if ((t_1min>=60)&&(FStart==1)) {minutes++; t_1min=0; fl_1min=1;}
 }
@@ -212,8 +212,8 @@ PRSAUTOST() ;//Автоматический режим стабилизации
 ReadDatUDP(); // Формирование данных приянтых по UDP
 OutDatUDP();  //--- Формирование данных для отправки по UDP
 
-if (fl_100ms==1) {
-	fl_100ms=0;
+if (fl_10ms==1) {
+//	fl_10ms=0;
 	DataAdc(); // Чтение АЦП - показания давления
 }
 
@@ -421,9 +421,13 @@ void ReadDatUDP()
 						{
 	                    StartPkt=0; Vbrk=0; EnPkt=0;
 	                    UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //подтверждение приема
-	                    FStart=0; STT&=0xBF; 
+						// окончание испытания
+						FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 						FlStop=1; //Произвести спуск системы
-						NumStepM=0; minutes=0;
+						FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
+						XPLin=0xFF; NumStepM=0;
+						PORTL=PORTL & B11110111;
+						PORTL=PORTL & B11111101;				// закрыть выпускной клапан						
 						}
 		 		 }
 	 		}
@@ -599,14 +603,42 @@ void DataLine() { //Формирование дынных линейных да�
 
 void DataAdc(){//----Чтение АЦП - показания давления -----//	
 		XPress[CXP]=analogRead(ADCPRSPin);
-		ADCPRS=(XPress[0]+XPress[1]+XPress[2]+XPress[3]+XPress[4]+XPress[5]+XPress[6]+XPress[7])/8;
-		if (ADCPRS>=Kn){			
-		ADCPRS=(ADCPRS-Kn)*Kmf;
+//		ADCPRS=(XPress[0]+XPress[1]+XPress[2]+XPress[3]+XPress[4]+XPress[5]+XPress[6]+XPress[7]
+//				+XPress[8]+XPress[9]+XPress[10]+XPress[11]+XPress[12]+XPress[13]+XPress[14]+XPress[15])/16;
+//		CXP=0x07 &(CXP+1);						
+		CXP=0x0F &(CXP+1);
+		ADCPRSnf=find_similar(XPress, 16, 1); //Поиск макс повторяющегося элемента в массиве		
+		if (ADCPRSnf>=Kn){
+			ADCPRSnf=(ADCPRSnf-Kn)*Kmf;
 		}
-		else {ADCPRS=0;} 
-		CXP=0x07 &(CXP+1);
-		fl_100ms=0;			
+		else {ADCPRSnf=0;} 
+		ADCPRS=float(1.0-FK)*float(ADCPRS)+float(FK)*float(ADCPRSnf);	//ФНЧ
+//		ADCPRS=ADCPRSnf;
+		fl_10ms=0;			
 }
+
+//**************Поиск макс повторяющегося элемента в массиве****************************
+uint16_t find_similar(uint16_t *buf, uint8_t size_buff, uint8_t range) 
+{
+ uint8_t maxcomp=0; //счётчик максимального колличества совпадений
+ uint16_t mcn=0;	//максимально часто встречающийся элемент массива
+ uint16_t comp;	//временная переменная
+ range++;	//допустимое отклонение
+
+	for (uint8_t i=0; i<size_buff; i++) 
+	{
+		comp=buf[i];	//кладем элемент массива в comp
+		uint8_t n=0;	//счётчик совпадении
+		for (uint8_t j=0; j<size_buff; j++)	{ if (buf[j]>comp-range && buf[j]<comp+range) n++;} // ищем повторения элемента comp в массиве buf	
+		if (n > maxcomp) //если число повторов больше чем было найдено ранее
+		{
+			maxcomp=n; //сохраняем счетчик повторов
+			mcn=comp; //сохраняем повторяемый элемент
+		}		
+	}
+ return mcn;
+}
+
 
 void Prir(){  // расчет приращения за время условной стабилизации
 				 
@@ -674,7 +706,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 		    		 {
 						 if ((AUTO_Press[NumStepM+1].P==0) && (AUTO_Press[NumStepM+1].T==0)) // окончание испытания
 						 {
-						 	 FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0; 
+						 	 FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 							 FlStop=1; //Произвести спуск системы
 							 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
 				    		 XPLin=0xFF; NumStepM=0;
@@ -690,7 +722,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 			    		 }
 		    		 }
 		    		 if (NumStepM>=11) { // окончание испытания
-										 FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0;
+										 FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 										 FlStop=1; //Произвести спуск системы
 						 				 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
 						 				 XPLin=0xFF; NumStepM=0;
@@ -699,7 +731,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 										 }				 
 				    }				   
 				   else { // окончание испытания
-					   FStart=0; STT&=0xBF;  FSetPrsSt=0; minutes=0; t_1min=0;
+					   FStart=0; STT&=0xBF;  FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 					   FlStop=1; //Произвести спуск системы
 					   FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
 					   XPLin=0xFF; NumStepM=0;
