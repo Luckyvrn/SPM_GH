@@ -43,7 +43,7 @@ int clockIn_2 = 19; //шина clock, не трогать, так надо ( att
 
 int ADCPRSPin = 8;     // номер аналогового входа к которому подключен датчик давления
 unsigned int ADCPRS=0, ADCPRSnf=0; //измеренное значение давления
-unsigned int XPress[32];
+unsigned int XPress[16];
 float FK = 0.5; //настройки фильтра ФНЧ
 
 byte isin = 0, isin1 = 0, isin2 = 0; //д=1 мм=0
@@ -54,8 +54,8 @@ byte index1, index2, CXP; //счётчик битов
 unsigned int xData1, xData2 , xDataBuf2, xDataBuf1; //новые показания 
 int xDataS, xDataS1Buf, xDataS2Buf;
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //буфер считанных данных с UDP
-unsigned int t_1ms, t_10ms, resultT1, resultT3;
-byte fl_1s, fl_10ms;
+unsigned int t_1ms, t_100ms, resultT1, resultT3;
+byte fl_1s, fl_100ms;
 
 byte tTimeout_1 = 0; //таймер 1мс для Timeout Line_1
 byte tTimeout_2 = 0; //таймер 1мс для Timeout Line_2
@@ -92,7 +92,7 @@ boolean FSetPrsSt, FSetPrsSt300, fl_1min, FTST, fl_RZ, FlStop=0; //флаг ус
 byte NumStepM=0;
 unsigned int AUTO_Press_ST; // текущее давление стабилизации
 unsigned int CZagrP, CVbrkP, Delta, DINT, CUSTPRESS;
-int  XPLin=0xFF;
+int  XPLin=0xFFF;
 int PrirLin[512]; // массив для расчета приращений
 
 // переменные для метода набора давления
@@ -109,8 +109,7 @@ void setup(){
 	digitalWrite (dataIn_2, 1);
 	digitalWrite (clockIn_2, 1);
 	pinMode (dataIn_2, INPUT); //привязываем шину данных на dataIn Line_2
-	pinMode (clockIn_2, INPUT); //и clock на 3й вход Line_2
-
+	pinMode (clockIn_2, INPUT); //и clock на 3й вход Line_2	
 	
 	attachInterrupt(5,getBit,FALLING); //и аттачим clock также на 2й вход //FALLING
 	attachInterrupt(4,getBit_1,FALLING); //и аттачим clock также на 2й вход  //FALLING
@@ -148,13 +147,13 @@ ISR(TIMER1_OVF_vect) //прерывание 1ms
 {
 	TCNT1=resultT1;
 	t_1ms++;
-	t_10ms++;
+	t_100ms++;
 	tTimeout_1++;
 	tTimeout_2++;
 	if (tTimeout_1>=251) {tTimeout_1=250;}
 	if (tTimeout_2>=251) {tTimeout_2=250;}
 	if (t_1ms>=1000) {fl_1s=1; t_1ms=0; t_1min++;}
-	if (t_10ms>=10) {fl_10ms=1; t_10ms=0;}	
+	if (t_100ms>=100) {fl_100ms=1; t_100ms=0;}	
 	if (t_1min>=60) {t_1min=60;}	
 	if ((t_1min>=60)&&(FStart==1)) {minutes++; t_1min=0; fl_1min=1;}
 }
@@ -212,9 +211,9 @@ PRSAUTOST() ;//Автоматический режим стабилизации
 ReadDatUDP(); // Формирование данных приянтых по UDP
 OutDatUDP();  //--- Формирование данных для отправки по UDP
 
-if (fl_10ms==1) {
-//	fl_10ms=0;
+if (fl_100ms==1) {
 	DataAdc(); // Чтение АЦП - показания давления
+//	fl_100ms=0;
 }
 
 if(fl_1s)
@@ -305,11 +304,11 @@ void OutDatUDP()
 			BufOut[12]=xData2;    //--- Значение измерения (Младшая часть)
 			BufOut[13]=xData2>>8;	//--- Значение измерения (Старшая часть)
 			BufOut[14]=xDataS;		//--- Значение среднее (Младшая часть)
-			BufOut[15]=xDataS>>8;	//--- Значение среднее (Старшая часть)						
-			BufOut[16]=ADCPRS;		//--- АЦП (Младшая часть)
-			BufOut[17]=ADCPRS>>8;   //--- АЦП (Старшая часть)
-			BufOut[18]=Delta;		//--- Дельта (Младшая часть)
-			BufOut[19]=Delta>>8;	//--- Дельта (Старшая часть)
+			BufOut[15]=xDataS>>8;	//--- Значение среднее (Старшая часть)	
+			BufOut[16]=XPLin;		//--- Дельта (Младшая часть)
+			BufOut[17]=XPLin>>8;	//--- Дельта (Старшая часть)					
+			BufOut[18]=ADCPRS;		//--- АЦП (Младшая часть)
+			BufOut[19]=ADCPRS>>8;   //--- АЦП (Старшая часть)
 			BufOut[20]=minutes;     //--- минуты (Младшая часть)
 			BufOut[21]=minutes>>8;  //--- минуты (Старшая часть)
 			BufOut[22]=t_1min;		//--- секунды (Старшая часть)
@@ -425,7 +424,7 @@ void ReadDatUDP()
 						FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 						FlStop=1; //Произвести спуск системы
 						FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
-						XPLin=0xFF; NumStepM=0;
+						XPLin=0xFFF; NumStepM=0;
 						PORTL=PORTL & B11110111;
 						PORTL=PORTL & B11111101;				// закрыть выпускной клапан						
 						}
@@ -614,7 +613,7 @@ void DataAdc(){//----Чтение АЦП - показания давления -
 		else {ADCPRSnf=0;} 
 		ADCPRS=float(1.0-FK)*float(ADCPRS)+float(FK)*float(ADCPRSnf);	//ФНЧ
 //		ADCPRS=ADCPRSnf;
-		fl_10ms=0;			
+		fl_100ms=0;			
 }
 
 //**************Поиск макс повторяющегося элемента в массиве****************************
@@ -666,7 +665,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 					if (minutes >= AUTO_Press[NumStepM].T) { //если прошло установленное время перейти к след ступени
 						minutes=0; t_1min=0; fl_RZ=0;NumStepM=NumStepM+1; 
 						FSetPrsSt=0; FSetPrsSt300=0; STT&=0xDF;// убрать 
-						Delta=0; CZagrP=0; CVbrkP=0; FTST=0; STT&=0xEF; XPLin=0xFF; //убрать
+						Delta=0; CZagrP=0; CVbrkP=0; FTST=0; STT&=0xEF; XPLin=0xFFF; //убрать
 						}
 					}
 				else {	//основной режим стабилизации	
@@ -698,7 +697,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 						 if (CUSTPRESS>=300)
 						 {
 						 	 minutes=0; t_1min=0; FTST=0; STT&=0xEF; fl_1min=1; 
-						 	 FSetPrsSt300=1; STT|=0x20; CUSTPRESS=0; Delta=0; CZagrP=0; CVbrkP=0;  XPLin=0xFF;				    	
+						 	 FSetPrsSt300=1; STT|=0x20; CUSTPRESS=0; Delta=0; CZagrP=0; CVbrkP=0;  XPLin=0xFFF;				    	
 			    		 }
 			    		 CUSTPRESS++;
 		    		 }
@@ -709,14 +708,14 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 						 	 FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 							 FlStop=1; //Произвести спуск системы
 							 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
-				    		 XPLin=0xFF; NumStepM=0;
+				    		 XPLin=0xFFF; NumStepM=0;
 							 PORTL=PORTL & B11110111;
 							 PORTL=PORTL & B11111101;				// закрыть выпускной клапан
 						 }
 						 else
 			    		 {
 							 FSetPrsSt=0; FSetPrsSt300=0; STT&=0xDF; NumStepM=NumStepM+1;  //если за время условной стаб приращение <0.1мм то перейти к след ступени
-							 Delta=0; CZagrP=0; CVbrkP=0; FTST=0; STT&=0xEF; XPLin=0xFF; minutes=0; t_1min=0;
+							 Delta=0; CZagrP=0; CVbrkP=0; FTST=0; STT&=0xEF; XPLin=0xFFF; minutes=0; t_1min=0;
 							 PORTL=PORTL & B11110111; // закрыть впускной клапан
 							 PORTL=PORTL & B11111101; // закрыть выпускной клапан
 			    		 }
@@ -725,7 +724,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 										 FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 										 FlStop=1; //Произвести спуск системы
 						 				 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
-						 				 XPLin=0xFF; NumStepM=0;
+						 				 XPLin=0xFFF; NumStepM=0;
 						 				 PORTL=PORTL & B11110111;
 										 PORTL=PORTL & B11111101;			// закрыть выпускной клапан
 										 }				 
@@ -734,7 +733,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 					   FStart=0; STT&=0xBF;  FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 					   FlStop=1; //Произвести спуск системы
 					   FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
-					   XPLin=0xFF; NumStepM=0;
+					   XPLin=0xFFF; NumStepM=0;
 					   PORTL=PORTL & B11110111;
 					   PORTL=PORTL & B11111101;			// закрыть выпускной клапан
 					   } 
