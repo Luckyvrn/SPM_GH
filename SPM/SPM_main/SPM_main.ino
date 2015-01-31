@@ -206,11 +206,12 @@ ISR(TIMER3_OVF_vect) //прерывание 1ms
 
 void loop()
 {
+	
 DataLine();	//Формирование данных линейных датчиков
-PRSAUTOST() ;//Автоматический режим стабилизации
 ReadDatUDP(); // Формирование данных приянтых по UDP
+PRSAUTOST() ;//Автоматический режим стабилизации
 OutDatUDP();  //--- Формирование данных для отправки по UDP
-
+	
 if (fl_100ms==1) {
 	DataAdc(); // Чтение АЦП - показания давления
 //	fl_100ms=0;
@@ -403,6 +404,7 @@ void ReadDatUDP()
 						{
 			 			StartPkt=0; Vbrk=0; EnPkt=0; Rejim=0;
 			 			UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //подтверждение приема
+						ipServer[0]=0xC0; ipServer[1]=0xA8; ipServer[2]=0x00; ipServer[3]=0xFF; //установка IP adres server широковещательный
 						}
 					if (BufKmd==0x42)		//передать загруженные команды управления и флаги состояния устройства 
 						{
@@ -423,6 +425,7 @@ void ReadDatUDP()
 						// окончание испытания
 						FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 						FlStop=1; //Произвести спуск системы
+						fl_RZ=0; //режим замочки остановлен
 						FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
 						XPLin=0xFFF; NumStepM=0;
 						PORTL=PORTL & B11110111;
@@ -661,9 +664,9 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 	    	 {
 		//		 Serial.write(0xFE);
 				if ((AUTO_Press[NumStepM].P==0) && (AUTO_Press[NumStepM].T>0)) { // режим замочки грунта
-					if (fl_RZ==0) {minutes=0; t_1min=0; fl_RZ=1;}
+					if (fl_RZ==0) {minutes=0; t_1min=0; fl_RZ=1; STT|=0x20; }
 					if (minutes >= AUTO_Press[NumStepM].T) { //если прошло установленное время перейти к след ступени
-						minutes=0; t_1min=0; fl_RZ=0;NumStepM=NumStepM+1; 
+						minutes=0; t_1min=0; fl_RZ=0; NumStepM=NumStepM+1; 
 						FSetPrsSt=0; FSetPrsSt300=0; STT&=0xDF;// убрать 
 						Delta=0; CZagrP=0; CVbrkP=0; FTST=0; STT&=0xEF; XPLin=0xFFF; //убрать
 						}
@@ -707,6 +710,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 						 {
 						 	 FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 							 FlStop=1; //Произвести спуск системы
+							 fl_RZ=0; //режим замочки остановлен
 							 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
 				    		 XPLin=0xFFF; NumStepM=0;
 							 PORTL=PORTL & B11110111;
@@ -714,7 +718,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 						 }
 						 else
 			    		 {
-							 FSetPrsSt=0; FSetPrsSt300=0; STT&=0xDF; NumStepM=NumStepM+1;  //если за время условной стаб приращение <0.1мм то перейти к след ступени
+							 FSetPrsSt=0; FSetPrsSt300=0; STT&=0xDF; NumStepM=NumStepM+1;  //если за время условной стаб приращение <0.1мм то перейти к след ступени							 
 							 Delta=0; CZagrP=0; CVbrkP=0; FTST=0; STT&=0xEF; XPLin=0xFFF; minutes=0; t_1min=0;
 							 PORTL=PORTL & B11110111; // закрыть впускной клапан
 							 PORTL=PORTL & B11111101; // закрыть выпускной клапан
@@ -723,6 +727,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 		    		 if (NumStepM>=11) { // окончание испытания
 										 FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 										 FlStop=1; //Произвести спуск системы
+										 fl_RZ=0; //режим замочки остановлен
 						 				 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
 						 				 XPLin=0xFFF; NumStepM=0;
 						 				 PORTL=PORTL & B11110111;
@@ -732,6 +737,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 				   else { // окончание испытания
 					   FStart=0; STT&=0xBF;  FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
 					   FlStop=1; //Произвести спуск системы
+					   fl_RZ=0; //режим замочки остановлен
 					   FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
 					   XPLin=0xFFF; NumStepM=0;
 					   PORTL=PORTL & B11110111;
@@ -741,11 +747,24 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 				 }				 
 
 	    	 }	
-	
+	if ((0x40 & STT)== 0x00) {minutes=0; t_1min=0;} // Автоматический режим выключен, сброс времени
+	if ((0x20 & STT)== 0x00) {minutes=0; t_1min=0;} // Выключен режим стабилизации, сброс времени
+				 
+	if (NumStepM>=10) { // окончание испытания
+		FStart=0; STT&=0xBF; FSetPrsSt=0; minutes=0; t_1min=0; fl_PressUp=0; fl_PressDn=0;
+		FlStop=1; //Произвести спуск системы
+		fl_RZ=0; //режим замочки остановлен
+		FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
+		XPLin=0xFFF; NumStepM=0;
+		PORTL=PORTL & B11110111;
+		PORTL=PORTL & B11111101;			// закрыть выпускной клапан
+		}
+			 
 	if (FlStop==1) {	
 		PORTL=PORTL & B11110111; // закрыть впускной клапан	
 		PORTL=PORTL | B00000010; //открыть выпускной клапан
 		if (ADCPRS<=15)	{ FlStop=0; PORTL=PORTL & B11111101; } // закрыть выпускной клапан		
-		}					 
+		}		
+							 
 	NumStep=NumStepM+1;	
 }
