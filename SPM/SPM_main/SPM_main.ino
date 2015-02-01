@@ -664,7 +664,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 	    	 {
 		//		 Serial.write(0xFE);
 				if ((AUTO_Press[NumStepM].P==0) && (AUTO_Press[NumStepM].T>0)) { // режим замочки грунта
-					if (fl_RZ==0) {minutes=0; t_1min=0; fl_RZ=1; STT|=0x20; }
+					if (fl_RZ==0) {minutes=0; t_1min=0; fl_RZ=1; STT|=0x20; DINT=AUTO_Press[NumStepM].T+10; }
 					if (minutes >= AUTO_Press[NumStepM].T) { //если прошло установленное время перейти к след ступени
 						minutes=0; t_1min=0; fl_RZ=0; NumStepM=NumStepM+1; 
 						FSetPrsSt=0; FSetPrsSt300=0; STT&=0xDF;// убрать 
