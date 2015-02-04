@@ -21,11 +21,15 @@
 // Enter a MAC address && IP address for your controller below.
 // The IP address will be dependent on your local network:
 byte mac[] = {
-0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x76 }; // MAC адрес устройства
-IPAddress ip(192, 168, 0, 176); //ip адрес устройства
+0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x76 }; //-------------------------- MAC адрес устройства------------------------------//
+IPAddress ip(192, 168, 0, 176);		  //---------------------------ip адрес устройства-------------------------------//
 IPAddress ipServer(192, 168, 0, 255); //послать всем
 
-unsigned int localPort = 21666;      //  // номер локального порта для прослушивания
+unsigned int localPort = 21666;      //------------------номер локального порта для прослушивания--------------------//
+
+unsigned int Send_Time_PUP=6; //--------------------------Время открывания ВПУСКНОГО КЛАПАНА мс----------------------//
+unsigned int Send_Time_PDN=6; //--------------------------Время открывания ВЫПУСКНОГО КЛАПАНА мс---------------------//
+unsigned int time_PLock=1000; //---------------------Время на сичтивание и усреднение показаний АЦП мс---------------//
 
 EthernetUDP Udp; // Создание экземпляра класса EthernetUDP для отправки и получения UDP-пакетов
 
@@ -97,8 +101,8 @@ int PrirLin[512]; // массив для расчета приращений
 
 // переменные для метода набора давления
 
-boolean fl_Run_PressUp, fl_PressUp, fl_Run_PressDn, fl_PressDn, fl_time_PFRZUp , fl_time_PFRZDn;
-byte t3_10ms, time_PUP, Send_Time_PUP, time_PDN, Send_Time_PDN, time_PFRZUp, time_PFRZDn;
+boolean  fl_PressUp, fl_Run_PressDn, fl_PressDn, fl_time_PFRZUp , fl_time_PFRZDn;
+unsigned int t3_10ms, time_PUP, time_PFRZDn, time_PFRZUp, time_PDN;
 
 void setup(){	
 	digitalWrite (dataIn_1, 1);
@@ -160,48 +164,39 @@ ISR(TIMER1_OVF_vect) //прерывание 1ms
 
 ISR(TIMER3_OVF_vect) //прерывание 1ms
 {
-	TCNT3=resultT3;
-	t3_10ms++;
-	if (t3_10ms>=10) {
-		t3_10ms=0;
-		
-		if (fl_PressUp==1 && time_PUP<=Send_Time_PUP && fl_time_PFRZUp==1) { // ВПУСКНОЙ КЛАПАН
+	TCNT3=resultT3;		
+		if (fl_PressUp==1 && time_PUP<Send_Time_PUP && fl_time_PFRZUp==1) { // ВПУСКНОЙ КЛАПАН
 			time_PUP++;
-			fl_Run_PressUp=1;
 			PORTL=PORTL | B00001000; //PL3 установка диапазона стабилзции давления (открыть впускной)
 			}	
 		else{
-			PORTL=PORTL & B11110111; // (закрыть впускной)
+//			PORTL=PORTL & B11110111; // (закрыть впускной)
 			time_PUP=0;
-			fl_Run_PressUp=0;
 			fl_time_PFRZUp=0;
 		}	
 		
 		if (fl_time_PFRZUp==0 )	{ //ожидание времени для усреднений значений АЦП
 			time_PFRZUp++;
 			PORTL=PORTL & B11110111; // (закрыть впускной)
-			if (time_PFRZUp>=80) { time_PFRZUp=0; fl_time_PFRZUp=1; }
+			if (time_PFRZUp>=time_PLock) { time_PFRZUp=0; fl_time_PFRZUp=1; time_PUP=0; }
 		}		
 //----------	
-		if (fl_PressDn==1 && time_PDN<=Send_Time_PDN && fl_time_PFRZDn==1) { // ВЫПУСКНОЙ КЛАПАН
+		if (fl_PressDn==1 && time_PDN<Send_Time_PDN && fl_time_PFRZDn==1) { // ВЫПУСКНОЙ КЛАПАН
 			time_PDN++;
-			fl_Run_PressDn=1;
 			PORTL=PORTL | B00000010; //PL1 установка диапазона стабилзции давления (открыть выпускной)
 		}
 		else{
-			PORTL=PORTL & B11111101; // (закрыть выпускной)
+//			PORTL=PORTL & B11111101; // (закрыть выпускной)
 			time_PDN=0;
-			fl_Run_PressDn=0;
 			fl_time_PFRZDn=0;
 		}		
 				
 		if (fl_time_PFRZDn==0)	{ //ожидание времени для усреднений значений АЦП
 			time_PFRZDn++;
 			PORTL=PORTL & B11111101; // (закрыть выпускной)
-			if (time_PFRZDn>=80) { time_PFRZDn=0;  fl_time_PFRZDn=1; }
+			if (time_PFRZDn>=time_PLock) { time_PFRZDn=0;  fl_time_PFRZDn=1; time_PDN=0; }
 		}		
-								
-		}
+//	}
 }
 
 void loop()
@@ -291,7 +286,7 @@ void OutDatUDP()
 			}		
 
 		if (UprOut[VbrkOut].KodKom==3)
-		{ // формирование пакета данных
+		{ // формирование пакета данных	
 			BufOut[2]=0x85;      //--- Код Пакета (Параметры Контроллера)
 			BufOut[3]=0x00;
 			BufOut[4]=0x00;			
@@ -470,9 +465,14 @@ void ReadDatUDP()
  					 CA=0;
  					 while(CA<LenPkt)
  					   {
- 						   *PByte=BufPrm[CA]; PByte++;
- 						   CA++;
+ 						 *PByte=BufPrm[CA]; PByte++;
+ 						 CA++;
  					   }
+ 					 while(CA<40)
+ 				       {
+	 					 *PByte=0x00; PByte++;
+	 					 CA++;
+ 					   }					 	
                      CntKom=CPrm >> 2;
  					 StartPkt=0; Vbrk=0; EnPkt=0;
  					 UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //выставить флаги для отправки подтверждения принятия команд управления
@@ -536,7 +536,7 @@ void getBit(){ //чтение битов и флаги
 		index1++;
 		
 		if (index1 >23) { //если слово считано полностью
-			xData1=xDataBuf1; //дынный Line_2
+			xData1=xDataBuf1*10; //дынный Line_2, перевод в микроны
 			index1=0;
 			xDataBuf1=0;
 		};		
@@ -560,7 +560,7 @@ void getBit_1(){ //чтение битов и флаги
 		index2++;
 		
 		if (index2 >23) { //если слово считано полностью
-			xData2=xDataBuf2; //дынный Line_2
+			xData2=xDataBuf2*10; //дынный Line_2, перевод в микроны
 			index2=0;
 			xDataBuf2=0;
 		};
@@ -585,21 +585,21 @@ void DataLine() { //Формирование дынных линейных да�
 	if ((tTimeout_1 > 200)||(xData1==0)) { //датчик Lin1 отключен		 
 		if (tTimeout_1 > 200) {xData1=0; isfs1=0; isin1=0; STT&=0xFE;}
 			if (isfs2==1) {xDataS=-1*xData2;} else {xDataS=xData2;}
-				if (isin2==1) {xDataS=12.7*xDataS;}	else {xDataS=10*xDataS;}	 } ;
+				if (isin2==1) {xDataS=1.27*xDataS;}	else {xDataS=xDataS;}	 } ;
 		
 	if ((tTimeout_2 > 200)||(xData2==0)) { //датчик Lin2 отключен
 		if (tTimeout_2 > 200) {xData2=0; isfs2=0; isin2=0; STT&=0xFD;}
 			if (isfs1==1) {xDataS=-1*xData1;} else {xDataS=xData1;}
-				if (isin1==1) {xDataS=12.7*xDataS;}	else {xDataS=10*xDataS;}	 };
+				if (isin1==1) {xDataS=1.27*xDataS;}	else {xDataS=xDataS;}	 };
 	
 	if (((STT&0x03)==0x03) && (xData1!=0) && (xData2!=0))	{ //оба датчика подключены	
 		if (isfs1==1) {xDataS1Buf=-1*xData1;} else {xDataS1Buf=xData1;}
 			if (isfs2==1) {xDataS2Buf=-1*xData2;} else {xDataS2Buf=xData2;}
 						
-		if ((isin1==1) && (isin2==1)) {xDataS=(12.7*xDataS1Buf+12.7*xDataS2Buf)/2;}
-			if ((isin1==1) && (isin2==0)) {xDataS=(12.7*xDataS1Buf+10*xDataS2Buf)/2;}
-				if ((isin1==0) && (isin2==1)) {xDataS=(10*xDataS1Buf+12.7*xDataS2Buf)/2;}
-					if ((isin1==0) && (isin2==0)) {xDataS=(10*xDataS1Buf+10*xDataS2Buf)/2;}  };	
+		if ((isin1==1) && (isin2==1)) {xDataS=(1.27*xDataS1Buf+1.27*xDataS2Buf)/2;}
+			if ((isin1==1) && (isin2==0)) {xDataS=(1.27*xDataS1Buf+xDataS2Buf)/2;}
+				if ((isin1==0) && (isin2==1)) {xDataS=(xDataS1Buf+1.27*xDataS2Buf)/2;}
+					if ((isin1==0) && (isin2==0)) {xDataS=(xDataS1Buf+xDataS2Buf)/2;}  };	
 																		
 }
 
@@ -679,19 +679,11 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 		    		 if (ADCPRS<=(AUTO_Press_ST-10)) { //задвть ворота давления						 
 //						 PORTL=PORTL | B00001000; //PL3 установка диапазона стабилзции давления (открыть впускной)
 						 fl_PressUp=1;
-						 if (fl_Run_PressUp==0){
-							Send_Time_PUP = round(abs(AUTO_Press_ST-ADCPRS)/10); // время открытия впускного клапана
-							if (Send_Time_PUP<10) {Send_Time_PUP=10;} //открываем минимум на 10 раз по 10милис
-							}
 						}
 		    		 else {PORTL=PORTL & B11110111; fl_PressUp=0;}
 		    		 if (ADCPRS>=(AUTO_Press_ST+15)){ //задвть ворота давления						 						 
-//						  PORTL=PORTL | B00000010; //PL1 установка диапазона стабилзции давления (открыть выпускной)
+//						 PORTL=PORTL | B00000010; //PL1 установка диапазона стабилзции давления (открыть выпускной)
 						 fl_PressDn=1;
-						 if (fl_Run_PressDn==0){
-							 Send_Time_PDN = round(abs(ADCPRS-AUTO_Press_ST)/10); // время открытия выпускного клапана
-							 if (Send_Time_PDN<10) {Send_Time_PDN=10;} //открываем минимум на 10 раз по 10милис		
-							 }
 						}						 
 		    		 else {PORTL=PORTL & B11111101; fl_PressDn=0;}
 						 
