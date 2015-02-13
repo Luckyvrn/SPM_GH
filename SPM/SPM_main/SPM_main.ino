@@ -411,7 +411,7 @@ void ReadDatUDP()
 						{
 			 			StartPkt=0; Vbrk=0; EnPkt=0;
 			 			UprOut[ZagrOut].Flag=1; UprOut[ZagrOut].KodKom=2; ZagrOut=0xF &(ZagrOut+1); //подтверждение приема
-						FStart=1; t_1min=0; STT|=0x40;
+						FStart=1; t_1min=0; STT|=0x40; NumStepM=0;
 						}
                     if (BufKmd==0x44)		// Остановить испытание
 						{
@@ -422,7 +422,7 @@ void ReadDatUDP()
 						FlStop=1; //Произвести спуск системы
 						fl_RZ=0; //режим замочки остановлен
 						FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
-						XPLin=0xFFF; NumStepM=0;
+						XPLin=0xFFF; // NumStepM=0;
 						PORTL=PORTL & B11110111;
 						PORTL=PORTL & B11111101;				// закрыть выпускной клапан						
 						}
@@ -704,7 +704,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 							 FlStop=1; //Произвести спуск системы
 							 fl_RZ=0; //режим замочки остановлен
 							 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
-				    		 XPLin=0xFFF; NumStepM=0;
+				    		 XPLin=0xFFF; // NumStepM=0;
 							 PORTL=PORTL & B11110111;
 							 PORTL=PORTL & B11111101;				// закрыть выпускной клапан
 						 }
@@ -721,7 +721,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 										 FlStop=1; //Произвести спуск системы
 										 fl_RZ=0; //режим замочки остановлен
 						 				 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
-						 				 XPLin=0xFFF; NumStepM=0;
+						 				 XPLin=0xFFF; // NumStepM=0;
 						 				 PORTL=PORTL & B11110111;
 										 PORTL=PORTL & B11111101;			// закрыть выпускной клапан
 										 }				 
@@ -731,7 +731,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 					   FlStop=1; //Произвести спуск системы
 					   fl_RZ=0; //режим замочки остановлен
 					   FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
-					   XPLin=0xFFF; NumStepM=0;
+					   XPLin=0xFFF; // NumStepM=0;
 					   PORTL=PORTL & B11110111;
 					   PORTL=PORTL & B11111101;			// закрыть выпускной клапан
 					   } 
@@ -747,7 +747,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 		FlStop=1; //Произвести спуск системы
 		fl_RZ=0; //режим замочки остановлен
 		FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
-		XPLin=0xFFF; NumStepM=0;
+		XPLin=0xFFF; // NumStepM=0;
 		PORTL=PORTL & B11110111;
 		PORTL=PORTL & B11111101;			// закрыть выпускной клапан
 		}
