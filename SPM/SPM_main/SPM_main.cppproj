@@ -63,20 +63,20 @@
         </avrgcc.compiler.symbols.DefSymbols>
         <avrgcc.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>C:\Program Files\Arduino\hardware\arduino\cores\arduino</Value>
-            <Value>C:\Program Files\Arduino\hardware\arduino\variants\mega</Value>
-            <Value>C:\Program Files\Arduino\libraries\SPI</Value>
-            <Value>C:\Program Files\Arduino\libraries\SPI\utility</Value>
-            <Value>C:\Program Files\Arduino\libraries\Ethernet</Value>
-            <Value>C:\Program Files\Arduino\libraries\Ethernet\utility</Value>
-            <Value>C:\Program Files\Arduino\libraries</Value>
-            <Value>C:\Program Files\Arduino\hardware\arduino\libraries</Value>
-            <Value>C:\Program Files\Visual Micro\Visual Micro for Arduino\Micro Platforms\default\debuggers</Value>
-            <Value>D:\Develop\ARDUINO PRG\libraries</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\include\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\include\avr\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\lib\gcc\avr\4.3.2\include\</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\cores\arduino</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\variants\mega</Value>
+            <Value>E:\Program\Arduino\libraries\SPI</Value>
+            <Value>E:\Program\Arduino\libraries\SPI\utility</Value>
+            <Value>E:\Program\Arduino\libraries\Ethernet</Value>
+            <Value>E:\Program\Arduino\libraries\Ethernet\utility</Value>
+            <Value>E:\Program\Arduino\libraries</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\libraries</Value>
+            <Value>E:\Program\visual micro\Micro Platforms\default\debuggers</Value>
+            <Value>E:\Program\Arduino\sketch\libraries</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\include\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\include\avr\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\lib\gcc\avr\4.3.2\include\</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
         <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
@@ -99,20 +99,20 @@
         </avrgcccpp.compiler.symbols.DefSymbols>
         <avrgcccpp.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>C:\Program Files\Arduino\hardware\arduino\cores\arduino</Value>
-            <Value>C:\Program Files\Arduino\hardware\arduino\variants\mega</Value>
-            <Value>C:\Program Files\Arduino\libraries\SPI</Value>
-            <Value>C:\Program Files\Arduino\libraries\SPI\utility</Value>
-            <Value>C:\Program Files\Arduino\libraries\Ethernet</Value>
-            <Value>C:\Program Files\Arduino\libraries\Ethernet\utility</Value>
-            <Value>C:\Program Files\Arduino\libraries</Value>
-            <Value>C:\Program Files\Arduino\hardware\arduino\libraries</Value>
-            <Value>C:\Program Files\Visual Micro\Visual Micro for Arduino\Micro Platforms\default\debuggers</Value>
-            <Value>D:\Develop\ARDUINO PRG\libraries</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\include\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\include\avr\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\lib\gcc\avr\4.3.2\include\</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\cores\arduino</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\variants\mega</Value>
+            <Value>E:\Program\Arduino\libraries\SPI</Value>
+            <Value>E:\Program\Arduino\libraries\SPI\utility</Value>
+            <Value>E:\Program\Arduino\libraries\Ethernet</Value>
+            <Value>E:\Program\Arduino\libraries\Ethernet\utility</Value>
+            <Value>E:\Program\Arduino\libraries</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\libraries</Value>
+            <Value>E:\Program\visual micro\Micro Platforms\default\debuggers</Value>
+            <Value>E:\Program\Arduino\sketch\libraries</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\include\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\include\avr\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\lib\gcc\avr\4.3.2\include\</Value>
             <Value>
             </Value>
           </ListValues>
@@ -188,7 +188,7 @@ build.arch=AVR
         <visualmicro.application.name>arduino10x</visualmicro.application.name>
         <visualmicro.package.name>arduino</visualmicro.package.name>
         <visualmicro.platform.name>avr</visualmicro.platform.name>
-        <arduino.upload.port>COM23</arduino.upload.port>
+        <arduino.upload.port>COM3</arduino.upload.port>
       </VisualMicroSettings>
     </VisualMicroSettings>
   </PropertyGroup>
@@ -215,20 +215,20 @@ build.arch=AVR
         </avrgcc.compiler.symbols.DefSymbols>
         <avrgcc.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>C:\Program Files\Arduino\hardware\arduino\cores\arduino</Value>
-            <Value>C:\Program Files\Arduino\hardware\arduino\variants\mega</Value>
-            <Value>C:\Program Files\Arduino\libraries\SPI</Value>
-            <Value>C:\Program Files\Arduino\libraries\SPI\utility</Value>
-            <Value>C:\Program Files\Arduino\libraries\Ethernet</Value>
-            <Value>C:\Program Files\Arduino\libraries\Ethernet\utility</Value>
-            <Value>C:\Program Files\Arduino\libraries</Value>
-            <Value>C:\Program Files\Arduino\hardware\arduino\libraries</Value>
-            <Value>C:\Program Files\Visual Micro\Visual Micro for Arduino\Micro Platforms\default\debuggers</Value>
-            <Value>D:\Develop\ARDUINO PRG\libraries</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\include\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\include\avr\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\lib\gcc\avr\4.3.2\include\</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\cores\arduino</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\variants\mega</Value>
+            <Value>E:\Program\Arduino\libraries\SPI</Value>
+            <Value>E:\Program\Arduino\libraries\SPI\utility</Value>
+            <Value>E:\Program\Arduino\libraries\Ethernet</Value>
+            <Value>E:\Program\Arduino\libraries\Ethernet\utility</Value>
+            <Value>E:\Program\Arduino\libraries</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\libraries</Value>
+            <Value>E:\Program\visual micro\Micro Platforms\default\debuggers</Value>
+            <Value>E:\Program\Arduino\sketch\libraries</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\include\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\include\avr\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\lib\gcc\avr\4.3.2\include\</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
         <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
@@ -251,20 +251,20 @@ build.arch=AVR
         </avrgcccpp.compiler.symbols.DefSymbols>
         <avrgcccpp.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>C:\Program Files\Arduino\hardware\arduino\cores\arduino</Value>
-            <Value>C:\Program Files\Arduino\hardware\arduino\variants\mega</Value>
-            <Value>C:\Program Files\Arduino\libraries\SPI</Value>
-            <Value>C:\Program Files\Arduino\libraries\SPI\utility</Value>
-            <Value>C:\Program Files\Arduino\libraries\Ethernet</Value>
-            <Value>C:\Program Files\Arduino\libraries\Ethernet\utility</Value>
-            <Value>C:\Program Files\Arduino\libraries</Value>
-            <Value>C:\Program Files\Arduino\hardware\arduino\libraries</Value>
-            <Value>C:\Program Files\Visual Micro\Visual Micro for Arduino\Micro Platforms\default\debuggers</Value>
-            <Value>D:\Develop\ARDUINO PRG\libraries</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\include\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\include\avr\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\avr\</Value>
-            <Value>c:\program files\arduino\hardware\tools\avr\lib\gcc\avr\4.3.2\include\</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\cores\arduino</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\variants\mega</Value>
+            <Value>E:\Program\Arduino\libraries\SPI</Value>
+            <Value>E:\Program\Arduino\libraries\SPI\utility</Value>
+            <Value>E:\Program\Arduino\libraries\Ethernet</Value>
+            <Value>E:\Program\Arduino\libraries\Ethernet\utility</Value>
+            <Value>E:\Program\Arduino\libraries</Value>
+            <Value>E:\Program\Arduino\hardware\arduino\libraries</Value>
+            <Value>E:\Program\visual micro\Micro Platforms\default\debuggers</Value>
+            <Value>E:\Program\Arduino\sketch\libraries</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\include\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\include\avr\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\avr\</Value>
+            <Value>e:\program\arduino\hardware\tools\avr\lib\gcc\avr\4.3.2\include\</Value>
             <Value>
             </Value>
           </ListValues>
@@ -340,7 +340,7 @@ build.arch=AVR
         <visualmicro.application.name>arduino10x</visualmicro.application.name>
         <visualmicro.package.name>arduino</visualmicro.package.name>
         <visualmicro.platform.name>avr</visualmicro.platform.name>
-        <arduino.upload.port>COM23</arduino.upload.port>
+        <arduino.upload.port>COM3</arduino.upload.port>
       </VisualMicroSettings>
     </VisualMicroSettings>
   </PropertyGroup>
