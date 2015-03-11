@@ -97,7 +97,7 @@ byte NumStepM=0;
 unsigned int AUTO_Press_ST; // текущее давление стабилизации
 unsigned int CZagrP, CVbrkP, Delta, DINT, CUSTPRESS;
 int  XPLin=0xFFF;
-int PrirLin[512]; // массив для расчета приращений
+int PrirLin[2048]; // массив для расчета приращений
 
 // переменные для метода набора давления
 
@@ -646,16 +646,16 @@ void Prir(){  // расчет приращения за время условн�
 				 
 // Serial.write(0xEE);
   PrirLin[CZagrP]=xDataS;
-  Delta=0x1FF & (CZagrP+(0x1FF&(0x1FF^CVbrkP))+1);
+  Delta=0x7FF & (CZagrP+(0x7FF&(0x7FF^CVbrkP))+1);
 // Serial.write(CZagrP);Serial.write(CVbrkP);
   if (Delta>=DINT)
 	  {
 	  XPLin=PrirLin[CZagrP]-PrirLin[CVbrkP]; Serial.write(XPLin); Serial.write(XPLin>>8);
-	  CVbrkP=0x1FF &( CVbrkP+1);
+	  CVbrkP=0x7FF &( CVbrkP+1);
 	  FTST=1; STT|=0x10;
 //	  Serial.write(0xAA);
 	  }
-  CZagrP=0x1FF & (CZagrP+1);	
+  CZagrP=0x7FF & (CZagrP+1);	
 	
 }
 
@@ -696,7 +696,7 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 			    		 }
 			    		 CUSTPRESS++;
 		    		 }
-		    		 if ((ADCPRS>=(AUTO_Press_ST-10)) && (ADCPRS<=(AUTO_Press_ST+15)) && (-100<=XPLin) && (XPLin<=100)) //задать ворота давления
+		    		 if ((ADCPRS>=(AUTO_Press_ST-10)) && (ADCPRS<=(AUTO_Press_ST+15)) && (-10<=XPLin) && (XPLin<=10)) //задать ворота давления 0,01 мм
 		    		 {
 						 if ((AUTO_Press[NumStepM+1].P==0) && (AUTO_Press[NumStepM+1].T==0)) // окончание испытания
 						 {
