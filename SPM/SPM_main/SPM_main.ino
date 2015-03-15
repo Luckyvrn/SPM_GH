@@ -96,7 +96,7 @@ boolean FSetPrsSt, FSetPrsSt300, fl_1min, FTST, fl_RZ, FlStop=0; //флаг ус
 byte NumStepM=0;
 unsigned int AUTO_Press_ST; // текущее давление стабилизации
 unsigned int CZagrP, CVbrkP, Delta, DINT, CUSTPRESS;
-int  XPLin=0xFFF;
+int  XPLin=0xFFF, XPLinSec=0xFFF;
 int PrirLin[2048]; // массив для расчета приращений
 
 // переменные для метода набора давления
@@ -226,6 +226,13 @@ if(fl_1s)
 		UprOut[ZagrOut].KodKom=3;
 		ZagrOut=0xF &(ZagrOut+1);
 		}	
+    if (FTST==1){
+	   XPLinSec=xDataS-PrirLin[CVbrkP];	
+	  }		
+    else{
+	   XPLinSec=0xFFF;	
+	  }
+	
 }
 
 if (fl_1min) {
@@ -301,8 +308,8 @@ void OutDatUDP()
 			BufOut[13]=xData2>>8;	//--- Значение измерения (Старшая часть)
 			BufOut[14]=xDataS;		//--- Значение среднее (Младшая часть)
 			BufOut[15]=xDataS>>8;	//--- Значение среднее (Старшая часть)	
-			BufOut[16]=XPLin;		//--- Дельта (Младшая часть)
-			BufOut[17]=XPLin>>8;	//--- Дельта (Старшая часть)					
+			BufOut[16]=XPLinSec;	//--- Дельта (Младшая часть)   BufOut[16]=XPLin;		//--- Дельта (Младшая часть)
+			BufOut[17]=XPLinSec>>8;	//--- Дельта (Старшая часть)   BufOut[17]=XPLin>>8;	//--- Дельта (Старшая часть)					
 			BufOut[18]=ADCPRS;		//--- АЦП (Младшая часть)
 			BufOut[19]=ADCPRS>>8;   //--- АЦП (Старшая часть)
 			BufOut[20]=minutes;     //--- минуты (Младшая часть)
