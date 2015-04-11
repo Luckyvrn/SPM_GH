@@ -5,7 +5,6 @@
  * Author: Дмитрий Владимирович
  */ 
 
-//#include <TimerOne.h>
 #include <SPI.h>         
 #include <Ethernet.h>
 #include <EthernetUdp.h>         // UDP library from: bjoern@cs.stanford.edu 12/30/2008
@@ -56,14 +55,14 @@ byte index1, index2, CXP; //счётчик битов
 
 
 unsigned int xData1, xData2 , xDataBuf2, xDataBuf1; //новые показания 
-int xDataS, xDataS1Buf, xDataS2Buf;
+int xDataS, xDataS1Buf, xDataS2Buf, xData1i, xData2i;
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //буфер считанных данных с UDP
 unsigned int t_1ms, t_100ms, resultT1, resultT3;
 byte fl_1s, fl_100ms;
 
 byte tTimeout_1 = 0; //таймер 1мс для Timeout Line_1
 byte tTimeout_2 = 0; //таймер 1мс для Timeout Line_2
-byte Timeout =10; //таймаут чтения битов в мс
+byte Timeout = 10; //таймаут чтения битов в мс
 
 struct TUprOut{ unsigned char Flag, KodKom; };
 TUprOut UprOut[16];
@@ -71,16 +70,16 @@ TUprOut UprOut[16];
 byte ZagrOut, VbrkOut, CRC;
 byte LenBuf;
 
-byte BufOut[256];
+byte BufOut[128];
 
 byte StartPkt, KodPkt, XC, Vbrk, CRS, Rejim, EnPkt, NumPkt, NumPvt, NumKmd, LenPkt;
 int CA;
 
 //переменные для предачи на сервер
 
-byte t_1min;
+byte t_1min, FPNSt;
 boolean FLin1Dis=0, FLin2Dis=0; //состояние датчиков Lin
-byte STT=0x00, NumStep; //статус устройства, NumStep - номер шага.
+byte STT=0x00, NumStep, TPNSt=0x00, STTALRM=0x00; //статус устройства, NumStep - номер шага, STTALRM-статус ошибок устройсва.
 unsigned int minutes=0, Km=1, KmL, KmH, Kn=0, KnL, KnH; // minutes - проидено минут с начала шага, Km и Kn - коэффициенты маштабирования и нуля.
 float Kmf;
 
@@ -92,7 +91,7 @@ byte BufPrm[41];
 
 // переменный для стабилизации
 
-boolean FSetPrsSt, FSetPrsSt300, fl_1min, FTST, fl_RZ, FlStop=0; //флаг установки давления стабилизации, флаг окончательной устновки после 300 задержки
+boolean FSetPrsSt, FSetPrsSt300, fl_1min=0, FTST, fl_RZ, FlStop=0; //флаг установки давления стабилизации, флаг окончательной устновки после 300 задержки
 byte NumStepM=0;
 unsigned int AUTO_Press_ST; // текущее давление стабилизации
 unsigned int CZagrP, CVbrkP, Delta, DINT, CUSTPRESS;
@@ -118,8 +117,6 @@ void setup(){
 	attachInterrupt(5,getBit,FALLING); //и аттачим clock также на 2й вход //FALLING
 	attachInterrupt(4,getBit_1,FALLING); //и аттачим clock также на 2й вход  //FALLING
 	
-//	Timer1.initialize(1000); // установить интервал срабатывания 1000 microseconds 
-//	Timer1.attachInterrupt( timerIsr ); // устновка функции (обработчика прерывания)
 	Timer1_init(1000);	// установить интервал срабатывания 1000 microseconds 
 	Timer3_init(1000);  // установить интервал срабатывания 1000 microseconds 
     
@@ -146,7 +143,6 @@ void setup(){
 	BufOut[4]=0x00;
 }
 
-//void timerIsr() //прерывание 1ms
 ISR(TIMER1_OVF_vect) //прерывание 1ms
 {
 	TCNT1=resultT1;
@@ -156,7 +152,9 @@ ISR(TIMER1_OVF_vect) //прерывание 1ms
 	tTimeout_2++;
 	if (tTimeout_1>=251) {tTimeout_1=250;}
 	if (tTimeout_2>=251) {tTimeout_2=250;}
-	if (t_1ms>=1000) {fl_1s=1; t_1ms=0; t_1min++;}
+	if (t_1ms>=1000) {fl_1s=1; t_1ms=0; //рассчет приращения для выполнения условия стаб. только при отсутствии ошибок
+		 if (STTALRM==0x00) {t_1min++;} // остановка отсчета времени если есть ошибка
+		 }								
 	if (t_100ms>=100) {fl_100ms=1; t_100ms=0;}	
 	if (t_1min>=60) {t_1min=60;}	
 	if ((t_1min>=60)&&(FStart==1)) {minutes++; t_1min=0; fl_1min=1;}
@@ -207,10 +205,19 @@ ReadDatUDP(); // Формирование данных приянтых по UDP
 PRSAUTOST() ;//Автоматический режим стабилизации
 OutDatUDP();  //--- Формирование данных для отправки по UDP
 
+
+//if (STT & 0x40) { //нажат старт
+	if (!(STT & 0x01)) {STTALRM|=0x01;}		// ОШИБКА отключен первый датчик 
+		else {STTALRM&=0xFE;}
+	if (!(STT & 0x02)) {STTALRM|=0x02;}		// ОШИБКА отключен второй датчик	
+		else {STTALRM&=0xFD;}
+//} 
+//if (STTALRM==0x00) { 
 if (fl_1min) {
 	fl_1min=0;
 	Prir(); // расчет приращения за время условной стабилизации	
 }
+//}
 	
 if(fl_1s)
 {
@@ -231,13 +238,11 @@ if(fl_1s)
 	  }		
     else{
 	   XPLinSec=0xFFF;	
-	  }
-	
+	  }	
 }
 
 if (fl_100ms==1) {
 	DataAdc(); // Чтение АЦП - показания давления
-//	fl_100ms=0;
 }
 
 }
@@ -297,26 +302,27 @@ void OutDatUDP()
 			BufOut[2]=0x85;      //--- Код Пакета (Параметры Контроллера)
 			BufOut[3]=0x00;
 			BufOut[4]=0x00;			
-			BufOut[5]=0x13;      //--- Длина Информационной Части
-			BufOut[6]=isin1;     //--- Признак системы измерения
-			BufOut[7]=isfs1;     //--- Знак Числа
-			BufOut[8]=xData1;    //--- Значение измерения (Младшая часть)
-			BufOut[9]=xData1>>8; //--- Значение измерения (Старшая часть)
-			BufOut[10]=isin2;     //--- Признак системы измерения
-			BufOut[11]=isfs2;     //--- Знак Числа
-			BufOut[12]=xData2;    //--- Значение измерения (Младшая часть)
-			BufOut[13]=xData2>>8;	//--- Значение измерения (Старшая часть)
-			BufOut[14]=xDataS;		//--- Значение среднее (Младшая часть)
-			BufOut[15]=xDataS>>8;	//--- Значение среднее (Старшая часть)	
-			BufOut[16]=XPLinSec;	//--- Дельта (Младшая часть)   BufOut[16]=XPLin;		//--- Дельта (Младшая часть)
-			BufOut[17]=XPLinSec>>8;	//--- Дельта (Старшая часть)   BufOut[17]=XPLin>>8;	//--- Дельта (Старшая часть)					
-			BufOut[18]=ADCPRS;		//--- АЦП (Младшая часть)
-			BufOut[19]=ADCPRS>>8;   //--- АЦП (Старшая часть)
-			BufOut[20]=minutes;     //--- минуты (Младшая часть)
-			BufOut[21]=minutes>>8;  //--- минуты (Старшая часть)
-			BufOut[22]=t_1min;		//--- секунды (Старшая часть)
-			BufOut[23]=NumStep;     // номер шага		
-			BufOut[24]=STT;		// ---статус устройств	
+			BufOut[5]=0x10;      //--- Длина Информационной Части
+//			BufOut[6]=isin1;     //--- Признак системы измерения
+//			BufOut[7]=isfs1;     //--- Знак Числа
+			BufOut[6]=xData1i;    //--- Значение измерения (Младшая часть)
+			BufOut[7]=xData1i>>8; //--- Значение измерения (Старшая часть)
+//			BufOut[10]=isin2;     //--- Признак системы измерения
+//			BufOut[11]=isfs2;     //--- Знак Числа
+			BufOut[8]=xData2i;    //--- Значение измерения (Младшая часть)
+			BufOut[9]=xData2i>>8;	//--- Значение измерения (Старшая часть)
+			BufOut[10]=xDataS;		//--- Значение среднее (Младшая часть)
+			BufOut[11]=xDataS>>8;	//--- Значение среднее (Старшая часть)	
+			BufOut[12]=XPLinSec;	//--- Дельта (Младшая часть)   BufOut[16]=XPLin;		//--- Дельта (Младшая часть)
+			BufOut[13]=XPLinSec>>8;	//--- Дельта (Старшая часть)   BufOut[17]=XPLin>>8;	//--- Дельта (Старшая часть)					
+			BufOut[14]=ADCPRS;		//--- АЦП (Младшая часть)
+			BufOut[15]=ADCPRS>>8;   //--- АЦП (Старшая часть)
+			BufOut[16]=minutes;     //--- минуты (Младшая часть)
+			BufOut[17]=minutes>>8;  //--- минуты (Старшая часть)
+			BufOut[18]=t_1min;		//--- секунды (Старшая часть)
+			BufOut[19]=NumStep;     // номер шага		
+			BufOut[20]=STT;		    // ---статус устройств	
+			BufOut[21]=STTALRM;		// ---статус ошибок устройств	
 
 // 			BufOut[6]=isin1;     //--- Признак системы измерения				****	
 // 			BufOut[7]=isfs1;     //--- Знак Числа								****
@@ -332,7 +338,7 @@ void OutDatUDP()
 // 			BufOut[17]=0x04;   //--- АЦП (Старшая часть)						****																
 //			BufOut[24]=STT|0x03;		// ---статус устройств //отладка		****
 			
-			LenBuf=24;
+			LenBuf=21;
 			}
 
 		if (UprOut[VbrkOut].KodKom==4)
@@ -591,22 +597,25 @@ void DataLine() { //Формирование дынных линейных да�
 	
 	if ((tTimeout_1 > 200)||(xData1==0)) { //датчик Lin1 отключен		 
 		if (tTimeout_1 > 200) {xData1=0; isfs1=0; isin1=0; STT&=0xFE;}
-			if (isfs2==1) {xDataS=-1*xData2;} else {xDataS=xData2;}
-				if (isin2==1) {xDataS=1.27*xDataS;}	else {xDataS=xDataS;}	 } ;
+			if (isfs2==1) {xDataS=-1*xData2; xData2i=xDataS; } else {xDataS=xData2; xData2i=xDataS;}
+				if (isin2==1) {xDataS=1.27*xDataS; xData2i=xDataS;}	else {xDataS=xDataS; xData2i=xDataS;}	 } ;
 		
 	if ((tTimeout_2 > 200)||(xData2==0)) { //датчик Lin2 отключен
 		if (tTimeout_2 > 200) {xData2=0; isfs2=0; isin2=0; STT&=0xFD;}
-			if (isfs1==1) {xDataS=-1*xData1;} else {xDataS=xData1;}
-				if (isin1==1) {xDataS=1.27*xDataS;}	else {xDataS=xDataS;}	 };
+			if (isfs1==1) {xDataS=-1*xData1; xData1i=xDataS;} else {xDataS=xData1; xData1i=xDataS;}
+				if (isin1==1) {xDataS=1.27*xDataS; xData1i=xDataS;}	else {xDataS=xDataS; xData1i=xDataS;}	 };
 	
-	if (((STT&0x03)==0x03) && (xData1!=0) && (xData2!=0))	{ //оба датчика подключены	
-		if (isfs1==1) {xDataS1Buf=-1*xData1;} else {xDataS1Buf=xData1;}
-			if (isfs2==1) {xDataS2Buf=-1*xData2;} else {xDataS2Buf=xData2;}
-						
-		if ((isin1==1) && (isin2==1)) {xDataS=(1.27*xDataS1Buf+1.27*xDataS2Buf)/2;}
-			if ((isin1==1) && (isin2==0)) {xDataS=(1.27*xDataS1Buf+xDataS2Buf)/2;}
-				if ((isin1==0) && (isin2==1)) {xDataS=(xDataS1Buf+1.27*xDataS2Buf)/2;}
-					if ((isin1==0) && (isin2==0)) {xDataS=(xDataS1Buf+xDataS2Buf)/2;}  };	
+	if ((STT&0x03)==0x03) { //&& (xData1!=0) && (xData2!=0))	{ //оба датчика подключены	
+		if (isfs1==1) {xDataS1Buf=-1*xData1; xData1i=xDataS1Buf; } else {xDataS1Buf=xData1; xData1i=xDataS1Buf;}
+			if (isfs2==1) {xDataS2Buf=-1*xData2; xData2i=xDataS2Buf;} else {xDataS2Buf=xData2; xData2i=xDataS2Buf;}
+				if (isin1==1) {xData1i=1.27*xDataS1Buf;} 
+					if (isin2==1) {xData2i=1.27*xDataS2Buf;}
+		if ((xData1!=0) && (xData2!=0)){									
+			if ((isin1==1) && (isin2==1)) {xDataS=(1.27*xDataS1Buf+1.27*xDataS2Buf)/2;}
+				if ((isin1==1) && (isin2==0)) {xDataS=(1.27*xDataS1Buf+xDataS2Buf)/2;}
+					if ((isin1==0) && (isin2==1)) {xDataS=(xDataS1Buf+1.27*xDataS2Buf)/2;}
+						if ((isin1==0) && (isin2==0)) {xDataS=(xDataS1Buf+xDataS2Buf)/2;} }
+	};	
 																		
 }
 
@@ -660,6 +669,8 @@ void Prir(){  // расчет приращения за время условн�
 	  XPLin=PrirLin[CZagrP]-PrirLin[CVbrkP]; Serial.write(XPLin); Serial.write(XPLin>>8);
 	  CVbrkP=0x7FF &( CVbrkP+1);
 	  FTST=1; STT|=0x10;
+	  if ((XPLin<-10) || (XPLin>10) || (STTALRM>=0x01)) {FPNSt=0;}
+	  if (FPNSt==1) {TPNSt++;}
 //	  Serial.write(0xAA);
 	  }
   CZagrP=0x7FF & (CZagrP+1);	
@@ -705,23 +716,27 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 		    		 }
 		    		 if ((ADCPRS>=(AUTO_Press_ST-10)) && (ADCPRS<=(AUTO_Press_ST+15)) && (-10<=XPLin) && (XPLin<=10) && (FSetPrsSt300==1)) //задать ворота давления 0,01 мм, условие перехода на стпень была выполнена стабилизация текущей ступени
 		    		 {
-						 if ((AUTO_Press[NumStepM+1].P==0) && (AUTO_Press[NumStepM+1].T==0)) // окончание испытания
-						 {
-						 	 FStart=0; STT&=0xBF; FSetPrsSt=0; fl_PressUp=0; fl_PressDn=0; // minutes=0; t_1min=0; для сохр. последней строки
-							 FlStop=1; //Произвести спуск системы
-							 fl_RZ=0; //режим замочки остановлен
-							 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0;
-				    		 XPLin=0xFFF; // NumStepM=0;
-							 PORTL=PORTL & B11110111;
-							 PORTL=PORTL & B11111101;				// закрыть выпускной клапан
-						 }
-						 else
-			    		 {
-							 FSetPrsSt=0; FSetPrsSt300=0; STT&=0xDF; NumStepM=NumStepM+1;  //если за время условной стаб приращение <0.01мм то перейти к след ступени							 
-							 Delta=0; CZagrP=0; CVbrkP=0; FTST=0; STT&=0xEF; XPLin=0xFFF; minutes=0; t_1min=0;
-							 PORTL=PORTL & B11110111; // закрыть впускной клапан
-							 PORTL=PORTL & B11111101; // закрыть выпускной клапан
-			    		 }
+						 FPNSt=1;
+						 if (TPNSt>=5) // выдержка 5 минут перед переходом на следующую ступень
+							{
+								if ((AUTO_Press[NumStepM+1].P==0) && (AUTO_Press[NumStepM+1].T==0)) // окончание испытания
+								 {
+						 			 FStart=0; STT&=0xBF; FSetPrsSt=0; fl_PressUp=0; fl_PressDn=0; // minutes=0; t_1min=0; для сохр. последней строки
+									 FlStop=1; //Произвести спуск системы
+									 fl_RZ=0; //режим замочки остановлен
+									 FSetPrsSt300=0; STT&=0xDF; FTST=0; STT&=0xEF; Delta=0; CZagrP=0; CVbrkP=0; FPNSt=0; TPNSt=0;
+				    				 XPLin=0xFFF; // NumStepM=0;
+									 PORTL=PORTL & B11110111;
+									 PORTL=PORTL & B11111101;				// закрыть выпускной клапан
+								 }
+								 else
+			    				 {
+									 FSetPrsSt=0; FSetPrsSt300=0; STT&=0xDF; NumStepM=NumStepM+1;  //если за время условной стаб приращение <0.01мм то перейти к след ступени							 
+									 Delta=0; CZagrP=0; CVbrkP=0; FTST=0; STT&=0xEF; XPLin=0xFFF; minutes=0; t_1min=0; FPNSt=0; TPNSt=0;
+									 PORTL=PORTL & B11110111; // закрыть впускной клапан
+									 PORTL=PORTL & B11111101; // закрыть выпускной клапан
+			    				 }
+							}
 		    		 }
 		    		 if (NumStepM>=11) { // окончание испытания
 										 FStart=0; STT&=0xBF; FSetPrsSt=0; fl_PressUp=0; fl_PressDn=0; // minutes=0; t_1min=0; для сохр. последней строки
@@ -746,8 +761,6 @@ void PRSAUTOST() { //Автоматический режим стабилиза�
 				 }				 
 
 	    	 }	
-//	if ((0x40 & STT)== 0x00) {minutes=0; t_1min=0;} // Автоматический режим выключен, сброс времени // для сохр. последней строки
-//	if ((0x20 & STT)== 0x00) {minutes=0; t_1min=0;} // Выключен режим стабилизации, сброс времени   // для сохр. последней строки
 				 
 	if (NumStepM>=10) { // окончание испытания
 		FStart=0; STT&=0xBF; FSetPrsSt=0; fl_PressUp=0; fl_PressDn=0; // minutes=0; t_1min=0;

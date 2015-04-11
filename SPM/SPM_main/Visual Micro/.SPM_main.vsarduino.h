@@ -9,11 +9,10 @@
 */
 
 #define __AVR_ATmega2560__
-#define ARDUINO 101
+#define ARDUINO 105
 #define ARDUINO_MAIN
 #define F_CPU 16000000L
 #define __AVR__
-#define __cplusplus
 extern "C" void __cxa_pure_virtual() {;}
 
 //
@@ -30,8 +29,8 @@ uint16_t find_similar(uint16_t *buf, uint8_t size_buff, uint8_t range);
 void Prir();
 void PRSAUTOST();
 
-#include "E:\Program\Arduino\hardware\arduino\variants\mega\pins_arduino.h" 
-#include "E:\Program\Arduino\hardware\arduino\cores\arduino\arduino.h"
-#include "D:\Lucky\2015\SPM_29.01.15\SPM\CV_SPM_GH\SPM\SPM_main\SPM_main.ino"
-#include "D:\Lucky\2015\SPM_29.01.15\SPM\CV_SPM_GH\SPM\SPM_main\MyClass.cpp"
-#include "D:\Lucky\2015\SPM_29.01.15\SPM\CV_SPM_GH\SPM\SPM_main\MyClass.h"
+#include "C:\Program Files\Arduino\hardware\arduino\variants\mega\pins_arduino.h" 
+#include "C:\Program Files\Arduino\hardware\arduino\cores\arduino\arduino.h"
+#include <SPM_main.ino>
+#include <MyClass.cpp>
+#include <MyClass.h>
