@@ -20,8 +20,8 @@
 // Enter a MAC address && IP address for your controller below.
 // The IP address will be dependent on your local network:
 byte mac[] = {
-0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x76 }; //-------------------------- MAC адрес устройства------------------------------//
-IPAddress ip(192, 168, 0, 176);		  //---------------------------ip адрес устройства-------------------------------//
+0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x60}; //-------------------------- MAC адрес устройства------------------------------//
+IPAddress ip(192, 168, 0, 160);		  //---------------------------ip адрес устройства-------------------------------//
 IPAddress ipServer(192, 168, 0, 255); //послать всем
 
 unsigned int localPort = 21666;      //------------------номер локального порта для прослушивания--------------------//
@@ -160,6 +160,7 @@ ISR(TIMER1_OVF_vect) //прерывание 1ms
 	if (t_1min>=60) {t_1min=60;}	
 	if ((t_1min>=60)&&(FStart==1)) {minutes++; t_1min=0; fl_1min=1;}
 	if (STTALRM>=0x01 && TSound<=100) {PORTB=PORTB^B10000000;} // инверсия 13 ножки (пищалка)
+		else {PORTB=PORTB&B01111111;}	
 	if (TSound>=200) {TSound=0;}
 }
 
