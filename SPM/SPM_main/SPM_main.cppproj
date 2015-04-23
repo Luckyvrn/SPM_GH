@@ -190,7 +190,7 @@ build.arch=AVR
         <visualmicro.application.name>arduino10x</visualmicro.application.name>
         <visualmicro.package.name>arduino</visualmicro.package.name>
         <visualmicro.platform.name>avr</visualmicro.platform.name>
-        <arduino.upload.port>COM23</arduino.upload.port>
+        <arduino.upload.port>COM41</arduino.upload.port>
       </VisualMicroSettings>
     </VisualMicroSettings>
     <VMSETTING_IncludePaths>C:/Program Files/Arduino/hardware/arduino/cores/arduino;C:/Program Files/Arduino/hardware/arduino/variants/mega;../../SPM_main;C:/Program Files/Arduino/libraries/SPI;C:/Program Files/Arduino/libraries/SPI/utility;C:/Program Files/Arduino/libraries/Ethernet;C:/Program Files/Arduino/libraries/Ethernet/utility;C:/Program Files/Arduino/libraries;C:/Program Files/Arduino/hardware/arduino/libraries;C:/Program Files/Visual Micro/Visual Micro for Arduino/Micro Platforms/default/debuggers;D:/Develop/ARDUINO PRG/libraries;c:/program files/arduino/hardware/tools/avr/avr/include/;c:/program files/arduino/hardware/tools/avr/avr/include/avr/;c:/program files/arduino/hardware/tools/avr/avr/;c:/program files/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2/include/;;</VMSETTING_IncludePaths>
@@ -345,7 +345,7 @@ build.arch=AVR
         <visualmicro.application.name>arduino10x</visualmicro.application.name>
         <visualmicro.package.name>arduino</visualmicro.package.name>
         <visualmicro.platform.name>avr</visualmicro.platform.name>
-        <arduino.upload.port>COM23</arduino.upload.port>
+        <arduino.upload.port>COM41</arduino.upload.port>
       </VisualMicroSettings>
     </VisualMicroSettings>
     <VMSETTING_IncludePaths>C:/Program Files/Arduino/hardware/arduino/cores/arduino;C:/Program Files/Arduino/hardware/arduino/variants/mega;../../SPM_main;C:/Program Files/Arduino/libraries/SPI;C:/Program Files/Arduino/libraries/SPI/utility;C:/Program Files/Arduino/libraries/Ethernet;C:/Program Files/Arduino/libraries/Ethernet/utility;C:/Program Files/Arduino/libraries;C:/Program Files/Arduino/hardware/arduino/libraries;C:/Program Files/Visual Micro/Visual Micro for Arduino/Micro Platforms/default/debuggers;D:/Develop/ARDUINO PRG/libraries;c:/program files/arduino/hardware/tools/avr/avr/include/;c:/program files/arduino/hardware/tools/avr/avr/include/avr/;c:/program files/arduino/hardware/tools/avr/avr/;c:/program files/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2/include/;;</VMSETTING_IncludePaths>
