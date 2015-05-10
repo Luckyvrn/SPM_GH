@@ -54,11 +54,10 @@
   <avrgcc.compiler.symbols.DefSymbols>
     <ListValues>
       <Value>__AVR_ATmega2560__</Value>
-      <Value>ARDUINO=101</Value>
+      <Value>ARDUINO=105</Value>
       <Value>ARDUINO_MAIN</Value>
       <Value>F_CPU=16000000L</Value>
       <Value>__AVR__</Value>
-      <Value>__cplusplus</Value>
     </ListValues>
   </avrgcc.compiler.symbols.DefSymbols>
   <avrgcc.compiler.directories.IncludePaths>
@@ -86,17 +85,15 @@
   <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
   <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
   <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
-  <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -include=arduino.h</avrgcc.compiler.miscellaneous.OtherFlags>
   <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
   <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
   <avrgcccpp.compiler.symbols.DefSymbols>
     <ListValues>
       <Value>__AVR_ATmega2560__</Value>
-      <Value>ARDUINO=101</Value>
+      <Value>ARDUINO=105</Value>
       <Value>ARDUINO_MAIN</Value>
       <Value>F_CPU=16000000L</Value>
       <Value>__AVR__</Value>
-      <Value>__cplusplus</Value>
     </ListValues>
   </avrgcccpp.compiler.symbols.DefSymbols>
   <avrgcccpp.compiler.directories.IncludePaths>
@@ -124,7 +121,6 @@
   <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
   <avrgcccpp.compiler.optimization.DebugLevel>Default (-g2)</avrgcccpp.compiler.optimization.DebugLevel>
   <avrgcccpp.compiler.warnings.AllWarnings>True</avrgcccpp.compiler.warnings.AllWarnings>
-  <avrgcccpp.compiler.miscellaneous.OtherFlags>-include=arduino.h</avrgcccpp.compiler.miscellaneous.OtherFlags>
   <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
 </AvrGccCpp>
     </ToolchainSettings>
@@ -190,10 +186,10 @@ build.arch=AVR
         <visualmicro.application.name>arduino10x</visualmicro.application.name>
         <visualmicro.package.name>arduino</visualmicro.package.name>
         <visualmicro.platform.name>avr</visualmicro.platform.name>
-        <arduino.upload.port>COM41</arduino.upload.port>
+        <arduino.upload.port>COM22</arduino.upload.port>
       </VisualMicroSettings>
     </VisualMicroSettings>
-    <VMSETTING_IncludePaths>C:/Program Files/Arduino/hardware/arduino/cores/arduino;C:/Program Files/Arduino/hardware/arduino/variants/mega;../../SPM_main;C:/Program Files/Arduino/libraries/SPI;C:/Program Files/Arduino/libraries/SPI/utility;C:/Program Files/Arduino/libraries/Ethernet;C:/Program Files/Arduino/libraries/Ethernet/utility;C:/Program Files/Arduino/libraries;C:/Program Files/Arduino/hardware/arduino/libraries;C:/Program Files/Visual Micro/Visual Micro for Arduino/Micro Platforms/default/debuggers;D:/Develop/ARDUINO PRG/libraries;c:/program files/arduino/hardware/tools/avr/avr/include/;c:/program files/arduino/hardware/tools/avr/avr/include/avr/;c:/program files/arduino/hardware/tools/avr/avr/;c:/program files/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2/include/;;</VMSETTING_IncludePaths>
+    <VMSETTING_IncludePaths>C:/Program Files/Arduino/hardware/arduino/cores/arduino;C:/Program Files/Arduino/hardware/arduino/variants/mega;../../SPM_main;C:/Program Files/Arduino/libraries/SPI;C:/Program Files/Arduino/libraries/Ethernet;C:/Program Files/Arduino/libraries/Ethernet/utility;C:/Program Files/Arduino/libraries;C:/Program Files/Arduino/hardware/arduino/libraries;C:/Program Files/Visual Micro/Visual Micro for Arduino/Micro Platforms/default/debuggers;D:/Develop/ARDUINO PRG/libraries;c:/program files/arduino/hardware/tools/avr/avr/include/;c:/program files/arduino/hardware/tools/avr/avr/include/avr/;c:/program files/arduino/hardware/tools/avr/avr/;c:/program files/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2/include/;;C:/Program Files/Arduino/libraries/SPI/utility;</VMSETTING_IncludePaths>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
@@ -209,11 +205,10 @@ build.arch=AVR
   <avrgcc.compiler.symbols.DefSymbols>
     <ListValues>
       <Value>__AVR_ATmega2560__</Value>
-      <Value>ARDUINO=101</Value>
+      <Value>ARDUINO=105</Value>
       <Value>ARDUINO_MAIN</Value>
       <Value>F_CPU=16000000L</Value>
       <Value>__AVR__</Value>
-      <Value>__cplusplus</Value>
     </ListValues>
   </avrgcc.compiler.symbols.DefSymbols>
   <avrgcc.compiler.directories.IncludePaths>
@@ -241,17 +236,15 @@ build.arch=AVR
   <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
   <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
   <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
-  <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -include=arduino.h</avrgcc.compiler.miscellaneous.OtherFlags>
   <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
   <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
   <avrgcccpp.compiler.symbols.DefSymbols>
     <ListValues>
       <Value>__AVR_ATmega2560__</Value>
-      <Value>ARDUINO=101</Value>
+      <Value>ARDUINO=105</Value>
       <Value>ARDUINO_MAIN</Value>
       <Value>F_CPU=16000000L</Value>
       <Value>__AVR__</Value>
-      <Value>__cplusplus</Value>
     </ListValues>
   </avrgcccpp.compiler.symbols.DefSymbols>
   <avrgcccpp.compiler.directories.IncludePaths>
@@ -279,7 +272,6 @@ build.arch=AVR
   <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
   <avrgcccpp.compiler.optimization.DebugLevel>Default (-g2)</avrgcccpp.compiler.optimization.DebugLevel>
   <avrgcccpp.compiler.warnings.AllWarnings>True</avrgcccpp.compiler.warnings.AllWarnings>
-  <avrgcccpp.compiler.miscellaneous.OtherFlags>-include=arduino.h</avrgcccpp.compiler.miscellaneous.OtherFlags>
   <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
 </AvrGccCpp>
     </ToolchainSettings>
@@ -345,10 +337,10 @@ build.arch=AVR
         <visualmicro.application.name>arduino10x</visualmicro.application.name>
         <visualmicro.package.name>arduino</visualmicro.package.name>
         <visualmicro.platform.name>avr</visualmicro.platform.name>
-        <arduino.upload.port>COM41</arduino.upload.port>
+        <arduino.upload.port>COM22</arduino.upload.port>
       </VisualMicroSettings>
     </VisualMicroSettings>
-    <VMSETTING_IncludePaths>C:/Program Files/Arduino/hardware/arduino/cores/arduino;C:/Program Files/Arduino/hardware/arduino/variants/mega;../../SPM_main;C:/Program Files/Arduino/libraries/SPI;C:/Program Files/Arduino/libraries/SPI/utility;C:/Program Files/Arduino/libraries/Ethernet;C:/Program Files/Arduino/libraries/Ethernet/utility;C:/Program Files/Arduino/libraries;C:/Program Files/Arduino/hardware/arduino/libraries;C:/Program Files/Visual Micro/Visual Micro for Arduino/Micro Platforms/default/debuggers;D:/Develop/ARDUINO PRG/libraries;c:/program files/arduino/hardware/tools/avr/avr/include/;c:/program files/arduino/hardware/tools/avr/avr/include/avr/;c:/program files/arduino/hardware/tools/avr/avr/;c:/program files/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2/include/;;</VMSETTING_IncludePaths>
+    <VMSETTING_IncludePaths>C:/Program Files/Arduino/hardware/arduino/cores/arduino;C:/Program Files/Arduino/hardware/arduino/variants/mega;../../SPM_main;C:/Program Files/Arduino/libraries/SPI;C:/Program Files/Arduino/libraries/Ethernet;C:/Program Files/Arduino/libraries/Ethernet/utility;C:/Program Files/Arduino/libraries;C:/Program Files/Arduino/hardware/arduino/libraries;C:/Program Files/Visual Micro/Visual Micro for Arduino/Micro Platforms/default/debuggers;D:/Develop/ARDUINO PRG/libraries;c:/program files/arduino/hardware/tools/avr/avr/include/;c:/program files/arduino/hardware/tools/avr/avr/include/avr/;c:/program files/arduino/hardware/tools/avr/avr/;c:/program files/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2/include/;;C:/Program Files/Arduino/libraries/SPI/utility;</VMSETTING_IncludePaths>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="SPM_main.ino">
